@@ -1,4 +1,4 @@
-name: Build Cordova iOS
+name: Add iOS Platform
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
         run: npm install
 
       - name: Add iOS Platform
-        run: cordova platform add ios@4.5.5
+        run: cordova platform add ios
 
       - name: Prepare Project
         run: cordova prepare ios
