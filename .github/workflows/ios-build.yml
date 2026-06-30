@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout Repository
@@ -25,6 +25,9 @@ jobs:
 
       - name: Install Cordova
         run: npm install -g cordova@9
+
+      - name: Select Xcode 15
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
       - name: Install Project Dependencies
         run: npm install
