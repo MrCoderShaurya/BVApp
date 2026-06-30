@@ -1017,7 +1017,12 @@ body.dark-mode .splash-screen {
     justify-content: space-between;
     -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
-    gap: 8px;
+    /* gap: 8px replaced for iOS 9 compatibility */
+    margin-bottom: 8px;
+}
+
+.canvas-toolbar-row > * + * {
+    margin-left: 8px;
 }
 
 .toolbar-group {
@@ -1027,7 +1032,11 @@ body.dark-mode .splash-screen {
     flex-direction: row;
     -webkit-align-items: center;
     align-items: center;
-    gap: 6px;
+    /* gap: 6px replaced for iOS 9 compatibility */
+}
+
+.toolbar-group > * + * {
+    margin-left: 6px;
 }
 
 .toolbar-label {
@@ -1110,11 +1119,15 @@ body.dark-mode .canvas-select {
     display: flex;
     -webkit-flex-direction: row;
     flex-direction: row;
-    gap: 6px;
+    /* gap: 6px replaced for iOS 9 compatibility */
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     padding: 3px 6px;
+}
+
+.color-palette > * + * {
+    margin-left: 6px;
 }
 
 body.dark-mode .color-palette {
@@ -1155,7 +1168,7 @@ body.dark-mode .color-swatch.active, body.dark-mode .text-color-swatch.active {
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     overflow: hidden;
-    aspect-ratio: 3 / 2;
+    /* aspect-ratio: 3 / 2 replaced with padding-bottom hack for iOS 9 */
     position: relative;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
@@ -1181,7 +1194,10 @@ body.dark-mode .canvas-container {
     position: relative;
     width: 100%;
     max-width: 100%;
-    aspect-ratio: 3 / 2;
+    /* aspect-ratio: 3 / 2 replaced with padding-bottom hack for iOS 9 */
+    /* 66.67% = (2/3) * 100 for a 3:2 ratio */
+    padding-bottom: 66.67%;
+    height: 0;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     background-color: #ffffff;
@@ -1335,7 +1351,11 @@ body.dark-mode .recent-note-body {
     border-radius: 14px 14px 0 0;
     padding: 6px;
     margin: 12px 0 0;
-    gap: 4px;
+    /* gap: 4px replaced for iOS 9 compatibility */
+}
+
+.editor-tools-ribbon > .tool-select-btn + .tool-select-btn {
+    margin-left: 4px;
 }
 
 body.dark-mode .editor-tools-ribbon {
@@ -1360,11 +1380,15 @@ body.dark-mode .editor-tools-ribbon {
     align-items: center;
     -webkit-justify-content: center;
     justify-content: center;
-    gap: 4px;
+    /* gap: 4px replaced for iOS 9 compatibility */
     border-radius: 10px;
     cursor: pointer;
     outline: none;
     transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.tool-select-btn svg {
+    margin-right: 4px;
 }
 
 body.dark-mode .tool-select-btn {
@@ -1475,9 +1499,15 @@ body.dark-mode .offline-scroll-container h3 {
 
 /* Accordions */
 .offline-accordion {
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
-    gap: 8px;
+    /* gap: 8px replaced for iOS 9 compatibility */
+}
+
+.offline-accordion .accordion-item + .accordion-item {
+    margin-top: 8px;
 }
 
 .accordion-item {

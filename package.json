@@ -13,7 +13,7 @@
   "author": "Apache Cordova Team",
   "license": "Apache-2.0",
   "dependencies": {
-    "cordova-ios": "^5.1.1",
+    "cordova-ios": "4.5.5",
     "cordova-plugin-inappbrowser": "^3.2.0"
   },
   "devDependencies": {

@@ -339,7 +339,10 @@ var BVApp = {
         // Toggle view-mode class on editor subview to control pointer events
         var editorSubview = document.getElementById('notes-editor-subview');
         if (editorSubview) {
-            editorSubview.classList.remove('view-mode-text', 'view-mode-pen', 'view-mode-highlighter', 'view-mode-eraser');
+            editorSubview.classList.remove('view-mode-text');
+            editorSubview.classList.remove('view-mode-pen');
+            editorSubview.classList.remove('view-mode-highlighter');
+            editorSubview.classList.remove('view-mode-eraser');
             editorSubview.classList.add('view-mode-' + toolName);
         }
 

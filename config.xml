@@ -3,10 +3,10 @@
     <name>Bhakti Vedanta App</name>
     <icon src="BVicon.png" />
     <description>
-        A sample Apache Cordova application that responds to the deviceready event.
+        Bhakti Vedanta App - A spiritual resource app for audio, calendar, and scripture.
     </description>
-    <author email="dev@cordova.apache.org" href="http://cordova.io">
-        Apache Cordova Team
+    <author email="mrcodershaurya@gmail.com" href="https://github.com/MrCoderShaurya">
+        MrCoderShaurya
     </author>
     <content src="index.html" />
     <plugin name="cordova-plugin-whitelist" spec="1" />
@@ -29,5 +29,10 @@
     <platform name="ios">
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
+        <!-- iOS 9.3.5 jailbroken iPad compatibility settings -->
+        <preference name="deployment-target" value="9.3" />
+        <preference name="AllowInlineMediaPlayback" value="true" />
+        <preference name="MediaPlaybackRequiresUserAction" value="false" />
+        <preference name="UIWebViewDecelerationSpeed" value="fast" />
     </platform>
 </widget>
