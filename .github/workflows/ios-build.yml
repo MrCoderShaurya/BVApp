@@ -8,28 +8,47 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      - name: Show Environment
+        run: |
+          sw_vers
+          xcodebuild -version
+          node -v
+          npm -v
+
       - name: Install Cordova
         run: npm install -g cordova@9
 
-      - name: Install Dependencies
+      - name: Install Project Dependencies
         run: npm install
 
+      - name: Remove Existing iOS Platform
+        run: |
+          cordova platform rm ios || true
+
       - name: Add iOS Platform
-        run: cordova platform add ios
+        run: |
+          cordova platform add ios@5.1.1 --verbose
 
-      - name: Prepare
-        run: cordova prepare ios
+      - name: Prepare Project
+        run: |
+          cordova prepare ios --verbose
 
-      - name: Build Xcode Project (Unsigned)
+      - name: Show iOS Platform
+        run: |
+          ls -R platforms/ios
+
+      - name: Build Unsigned App
         run: |
           cd platforms/ios
+
           xcodebuild \
             -workspace "Bhakti Vedanta App.xcworkspace" \
             -scheme "Bhakti Vedanta App" \
@@ -39,10 +58,24 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
-            build
+            build | tee build.log
 
-      - name: Upload Build
+          echo "========== BUILD LOG =========="
+          cat build.log
+
+      - name: Show Build Folder
+        if: always()
+        run: |
+          echo "===== BUILD DIRECTORY ====="
+          find platforms/ios -type d -name "*.app"
+          find platforms/ios -type f | grep -E "\.app|\.ipa|build.log"
+
+      - name: Upload Build Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: platforms/ios/build
+          path: |
+            platforms/ios/build
+            platforms/ios/build.log
+            platforms/ios
