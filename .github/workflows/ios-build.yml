@@ -1,11 +1,11 @@
-name: Add iOS Platform
+name: Build iOS Unsigned
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - uses: actions/checkout@v4
@@ -24,14 +24,25 @@ jobs:
       - name: Add iOS Platform
         run: cordova platform add ios
 
-      - name: Prepare Project
+      - name: Prepare
         run: cordova prepare ios
 
-      - name: Build iOS
-        run: cordova build ios --device --verbose
+      - name: Build Xcode Project (Unsigned)
+        run: |
+          cd platforms/ios
+          xcodebuild \
+            -workspace "Bhakti Vedanta App.xcworkspace" \
+            -scheme "Bhakti Vedanta App" \
+            -configuration Debug \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            build
 
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: platforms/ios/build/device
+          path: platforms/ios/build
