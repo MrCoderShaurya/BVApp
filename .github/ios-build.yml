@@ -1,0 +1,45 @@
+name: Build Cordova iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Cordova
+        run: npm install -g cordova@9
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Add iOS Platform
+        run: |
+          if [ ! -d "platforms/ios" ]; then
+            cordova platform add ios@4.5.5
+          fi
+
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          cd platforms/ios
+          pod install
+
+      - name: Build iOS
+        run: |
+          cordova build ios --device
+
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: platforms/ios/build
