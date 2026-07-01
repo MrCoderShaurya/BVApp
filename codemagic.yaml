@@ -45,10 +45,15 @@ workflows:
         script: |
           cordova prepare ios
 
+      - name: Install CocoaPods dependencies
+        script: |
+          cd platforms/ios
+          pod install --repo-update
+
       - name: Build unsigned .app
         script: |
           xcodebuild \
-            -project "platforms/ios/Bhakti Vedanta App.xcodeproj" \
+            -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -sdk iphoneos \
@@ -57,6 +62,7 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            IPHONEOS_DEPLOYMENT_TARGET=12.0 \
             build
 
       - name: Package into unsigned .ipa
@@ -67,7 +73,7 @@ workflows:
           cp -r "$APP_PATH" "$CM_BUILD_DIR/Payload/"
           cd "$CM_BUILD_DIR"
           zip -r BVApp-unsigned.ipa Payload/
-          echo "IPA created: $CM_BUILD_DIR/BVApp-unsigned.ipa"
+          echo "IPA created successfully"
 
     artifacts:
       - $CM_BUILD_DIR/BVApp-unsigned.ipa
@@ -105,3 +111,4 @@ workflows:
 
     artifacts:
       - platforms/android/app/build/outputs/apk/debug/*.apk
+
