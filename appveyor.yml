@@ -9,6 +9,8 @@ install:
   - npm install
   - cordova platform add ios@5.1.1
   - cordova prepare ios
+  # Resize icons to exact required pixel dimensions using sips
+  - node resize_icons.js
   # Patch the storyboard to use classic calibratedWhite color space (iOS 9 compatible)
   - node patch_storyboard.js
 
@@ -34,7 +36,11 @@ build_script:
 after_build:
   - mkdir -p Payload
   - |
-    APP_PATH=$(find /usr/local/Cellar /Users/appveyor -name "Bhakti Vedanta App.app" 2>/dev/null | head -n 1)
+    APP_PATH="$PWD/DerivedData/Build/Products/Release-iphoneos/Bhakti Vedanta App.app"
+    if [ ! -d "$APP_PATH" ]; then
+      echo "Warning: Direct path not found, falling back to find search..."
+      APP_PATH=$(find /usr/local/Cellar /Users/appveyor -name "Bhakti Vedanta App.app" 2>/dev/null | head -n 1)
+    fi
     echo "Found app bundle at: $APP_PATH"
     cp -r "$APP_PATH" Payload/
     # Thin the binary to armv7-only so sideloading tools don't get IncorrectArchitecture
