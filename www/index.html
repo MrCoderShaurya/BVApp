@@ -46,6 +46,17 @@
                         d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                 </svg>
             </button>
+            <button id="btn-zoom-out" class="header-btn hidden" title="Zoom Out">
+                <svg viewBox="0 0 24 24" width="22" height="22">
+                    <path fill="currentColor" d="M19 13H5v-2h14v2z" />
+                </svg>
+            </button>
+            <span id="zoom-level-indicator" class="zoom-indicator hidden">100%</span>
+            <button id="btn-zoom-in" class="header-btn hidden" title="Zoom In">
+                <svg viewBox="0 0 24 24" width="22" height="22">
+                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+            </button>
             <button id="btn-theme" class="header-btn" title="Toggle Dark/Light Mode">
                 <svg id="theme-moon" viewBox="0 0 24 24" width="22" height="22">
                     <path fill="currentColor"
@@ -123,6 +134,18 @@
                     <div class="dash-info">
                         <h3>Calendar</h3>
                         <p>Vaishnava festival days & Ekadasi</p>
+                    </div>
+                </button>
+
+                <button class="dash-card" data-target="meetings">
+                    <div class="dash-icon meetings-color">
+                        <svg viewBox="0 0 24 24" width="32" height="32">
+                            <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+                        </svg>
+                    </div>
+                    <div class="dash-info">
+                        <h3>Meetings</h3>
+                        <p>Join Zoom & Google Meet calls</p>
                     </div>
                 </button>
 
@@ -415,6 +438,73 @@
 
 
 
+        <!-- Section 6: Meetings (Zoom & Google Meet) -->
+        <section id="view-meetings" class="content-view">
+            <!-- Subview 6A: Launcher Dashboard -->
+            <div id="meetings-launcher" class="meetings-subpanel active">
+                <div class="meetings-card-container">
+                    <!-- Zoom Launcher -->
+                    <div class="launcher-block">
+                        <div class="launcher-head zoom-theme">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+                            </svg>
+                            <h3>Zoom Meeting Launcher</h3>
+                        </div>
+                        <div class="launcher-body">
+                            <p class="launcher-note">Enter Zoom Link or Meeting ID to load:</p>
+                            <input type="text" id="zoom-url-field" class="meetings-input" placeholder="https://zoom.us/j/... or Meeting ID">
+                            <div class="launcher-buttons">
+                                <button id="btn-zoom-iframe" class="action-btn zoom-bg">Load in App (Webview)</button>
+                                <button id="btn-zoom-native" class="action-btn outline-bg">Launch Zoom App</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Google Meet Launcher -->
+                    <div class="launcher-block">
+                        <div class="launcher-head meet-theme">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 12H9v-2h6v2zm3-4H6V8h12v4z" />
+                            </svg>
+                            <h3>Google Meet Launcher</h3>
+                        </div>
+                        <div class="launcher-body">
+                            <p class="launcher-note">Enter Google Meet link or code to join:</p>
+                            <input type="text" id="meet-url-field" class="meetings-input" placeholder="https://meet.google.com/abc-defg-hij">
+                            <div class="launcher-buttons">
+                                <button id="btn-meet-iframe" class="action-btn meet-bg">Load in App (Webview)</button>
+                                <button id="btn-meet-native" class="action-btn outline-bg">Launch Safari / App</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subview 6B: Embedded Webview Portal -->
+            <div id="meetings-portal" class="meetings-subpanel">
+                <div class="online-state">
+                    <div class="spinner-container" id="spinner-meetings">
+                        <div class="loading-spinner"></div>
+                        <p>Connecting to meeting...</p>
+                    </div>
+                    <div class="iframe-scroll-wrapper">
+                        <iframe id="iframe-meetings" class="content-iframe" frameborder="0"></iframe>
+                    </div>
+                </div>
+                <div class="helper-content offline-state hidden">
+                    <div class="helper-icon offline-color">
+                        <svg viewBox="0 0 24 24" width="64" height="64">
+                            <path fill="currentColor"
+                                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
+                        </svg>
+                    </div>
+                    <h2>No Internet Connection</h2>
+                    <p class="helper-desc">An active internet connection is required to load video conferences.</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Section 5: Local Notes (Offline App) -->
         <section id="view-notes" class="content-view">
             <!-- Sub-view 5A: Notes List -->
@@ -675,6 +765,12 @@
                     d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z" />
             </svg>
             <span class="nav-label">Calendar</span>
+        </button>
+        <button class="nav-tab" data-tab="meetings">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+                <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+            </svg>
+            <span class="nav-label">Meetings</span>
         </button>
         <button class="nav-tab" data-tab="notes">
             <svg viewBox="0 0 24 24" class="nav-icon">

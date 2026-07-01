@@ -20,6 +20,10 @@
     <allow-navigation href="https://vedabase.io/*" />
     <allow-navigation href="http://*.vaisnavacalendar.com/*" />
     <allow-navigation href="http://www.vaisnavacalendar.com/*" />
+    <allow-navigation href="https://meet.google.com/*" />
+    <allow-navigation href="https://*.meet.google.com/*" />
+    <allow-navigation href="https://zoom.us/*" />
+    <allow-navigation href="https://*.zoom.us/*" />
     <allow-navigation href="file://*/*" />
     <allow-navigation href="*" />
     <allow-intent href="http://*/*" />
@@ -45,6 +49,7 @@
         <preference name="UIWebViewDecelerationSpeed" value="fast" />
         <preference name="DisallowOverscroll" value="true" />
         <preference name="UIWebViewBounce" value="false" />
+        <preference name="EnableViewportScale" value="true" />
     </platform>
 
 </widget>

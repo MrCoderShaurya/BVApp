@@ -17,6 +17,7 @@ var appState = {
     saveTimeout: null,
     isDarkMode: false,
     isOnline: true,
+    zoomScale: 1.0,
     
     // Sketchpad Drawing State
     isDrawing: false,
@@ -167,6 +168,13 @@ var BVApp = {
 
         // Header Action Buttons
         document.getElementById('btn-home').addEventListener('click', function() {
+            if (appState.activeTab === 'meetings') {
+                var portal = document.getElementById('meetings-portal');
+                if (portal && !portal.classList.contains('hidden')) {
+                    self.resetMeetingsPortal();
+                    return;
+                }
+            }
             self.switchTab('dashboard');
         });
 
@@ -344,6 +352,59 @@ var BVApp = {
                     }
                 }
             });
+        }
+
+        // --- Meetings Tab Action Listeners ---
+        document.getElementById('btn-zoom-iframe').addEventListener('click', function() {
+            var url = document.getElementById('zoom-url-field').value.trim();
+            if (!url) return;
+            if (/^\d+$/.test(url.replace(/\s+/g, ''))) {
+                url = 'https://zoom.us/wc/' + url.replace(/\s+/g, '') + '/join';
+            }
+            self.loadMeetingsPortal(url);
+        });
+
+        document.getElementById('btn-zoom-native').addEventListener('click', function() {
+            var url = document.getElementById('zoom-url-field').value.trim();
+            if (!url) return;
+            if (/^\d+$/.test(url.replace(/\s+/g, ''))) {
+                window.open('zoomus://zoom.us/join?confno=' + url.replace(/\s+/g, ''), '_system');
+            } else {
+                window.open(url, '_system');
+            }
+        });
+
+        document.getElementById('btn-meet-iframe').addEventListener('click', function() {
+            var url = document.getElementById('meet-url-field').value.trim();
+            if (!url) return;
+            self.loadMeetingsPortal(url);
+        });
+
+        document.getElementById('btn-meet-native').addEventListener('click', function() {
+            var url = document.getElementById('meet-url-field').value.trim();
+            if (!url) return;
+            window.open(url, '_system');
+        });
+
+        document.getElementById('btn-zoom-in').addEventListener('click', function() {
+            self.adjustMeetingsZoom(0.1);
+        });
+
+        document.getElementById('btn-zoom-out').addEventListener('click', function() {
+            self.adjustMeetingsZoom(-0.1);
+        });
+
+        var meetingsIframe = document.getElementById('iframe-meetings');
+        if (meetingsIframe) {
+            meetingsIframe.onload = function() {
+                var spinner = document.getElementById('spinner-meetings');
+                if (spinner) {
+                    spinner.style.opacity = '0';
+                    setTimeout(function() {
+                        spinner.classList.add('hidden');
+                    }, 300);
+                }
+            };
         }
     },
 
@@ -648,6 +709,25 @@ var BVApp = {
             else if (tabId === 'bhajans') titleNode.innerText = 'Bhajans';
             else if (tabId === 'reading') titleNode.innerText = 'Reading';
             else if (tabId === 'calendar') titleNode.innerText = 'Calendar';
+            else if (tabId === 'meetings') titleNode.innerText = 'Meetings';
+        }
+
+        // Toggle visibility of zoom scale controls in the header
+        var zoomInBtn = document.getElementById('btn-zoom-in');
+        var zoomOutBtn = document.getElementById('btn-zoom-out');
+        var zoomIndicator = document.getElementById('zoom-level-indicator');
+
+        if (tabId === 'meetings') {
+            if (zoomInBtn) zoomInBtn.classList.remove('hidden');
+            if (zoomOutBtn) zoomOutBtn.classList.remove('hidden');
+            if (zoomIndicator) {
+                zoomIndicator.classList.remove('hidden');
+                zoomIndicator.innerText = Math.round(appState.zoomScale * 100) + '%';
+            }
+        } else {
+            if (zoomInBtn) zoomInBtn.classList.add('hidden');
+            if (zoomOutBtn) zoomOutBtn.classList.add('hidden');
+            if (zoomIndicator) zoomIndicator.classList.add('hidden');
         }
 
         // 4. Trigger iframe load for remote tabs (with connectivity support)
@@ -721,6 +801,16 @@ var BVApp = {
                 }
                 
                 // Force reload src
+                iframe.src = iframe.src;
+            }
+        } else if (tabId === 'meetings') {
+            var iframe = document.getElementById('iframe-meetings');
+            if (iframe) {
+                var spinner = document.getElementById('spinner-meetings');
+                if (spinner) {
+                    spinner.style.opacity = '1';
+                    spinner.classList.remove('hidden');
+                }
                 iframe.src = iframe.src;
             }
         }
@@ -1259,6 +1349,69 @@ var BVApp = {
         if (minutes < 10) minutes = '0' + minutes;
         
         return month + ' ' + day + ', ' + year + ' ' + hours + ':' + minutes;
+    },
+
+    loadMeetingsPortal: function(url) {
+        if (!/^https?:\/\//i.test(url)) {
+            url = 'https://' + url;
+        }
+        var portal = document.getElementById('meetings-portal');
+        var launcher = document.getElementById('meetings-launcher');
+        var iframe = document.getElementById('iframe-meetings');
+        var spinner = document.getElementById('spinner-meetings');
+
+        if (portal && launcher && iframe) {
+            launcher.classList.remove('active');
+            launcher.style.display = 'none';
+            portal.classList.add('active');
+            portal.style.display = 'block';
+
+            if (spinner) {
+                spinner.style.opacity = '1';
+                spinner.classList.remove('hidden');
+            }
+
+            iframe.src = url;
+            this.applyMeetingsZoom();
+            this.switchTab('meetings');
+        }
+    },
+
+    resetMeetingsPortal: function() {
+        var portal = document.getElementById('meetings-portal');
+        var launcher = document.getElementById('meetings-launcher');
+        var iframe = document.getElementById('iframe-meetings');
+
+        if (portal && launcher && iframe) {
+            iframe.src = 'about:blank';
+            portal.classList.remove('active');
+            portal.style.display = 'none';
+            launcher.classList.add('active');
+            launcher.style.display = 'block';
+        }
+    },
+
+    adjustMeetingsZoom: function(delta) {
+        var newZoom = appState.zoomScale + delta;
+        if (newZoom >= 0.5 && newZoom <= 3.0) {
+            appState.zoomScale = parseFloat(newZoom.toFixed(1));
+            this.applyMeetingsZoom();
+        }
+    },
+
+    applyMeetingsZoom: function() {
+        var scale = appState.zoomScale;
+        var iframe = document.getElementById('iframe-meetings');
+        if (iframe) {
+            iframe.style.transform = 'scale(' + scale + ')';
+            iframe.style.transformOrigin = '0 0';
+            iframe.style.width = (100 / scale) + '%';
+            iframe.style.height = (100 / scale) + '%';
+        }
+        var zoomIndicator = document.getElementById('zoom-level-indicator');
+        if (zoomIndicator) {
+            zoomIndicator.innerText = Math.round(scale * 100) + '%';
+        }
     },
 
     escapeHTML: function(str) {
