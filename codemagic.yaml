@@ -50,30 +50,35 @@ workflows:
           cd platforms/ios
           pod install --repo-update
 
-      - name: Build unsigned .app
+      - name: Archive app (unsigned)
         script: |
-          xcodebuild \
+          xcodebuild archive \
             -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
-            -sdk iphoneos \
-            -derivedDataPath "$CM_BUILD_DIR/DerivedData" \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/BVApp.xcarchive" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
+            AD_HOC_CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
             IPHONEOS_DEPLOYMENT_TARGET=12.0 \
-            build
+            ENABLE_BITCODE=NO \
+            ENABLE_ON_DEMAND_RESOURCES=NO \
+            SKIP_INSTALL=NO
 
-      - name: Package into unsigned .ipa
+      - name: Package archive into unsigned .ipa
         script: |
-          APP_PATH=$(find "$CM_BUILD_DIR/DerivedData" -name "*.app" -not -path "*/intermediates/*" | head -1)
+          # Extract .app from the .xcarchive
+          APP_PATH=$(find "$CM_BUILD_DIR/BVApp.xcarchive" -name "*.app" | head -1)
           echo "Found .app at: $APP_PATH"
           mkdir -p "$CM_BUILD_DIR/Payload"
           cp -r "$APP_PATH" "$CM_BUILD_DIR/Payload/"
           cd "$CM_BUILD_DIR"
           zip -r BVApp-unsigned.ipa Payload/
-          echo "IPA created successfully"
+          ls -lh BVApp-unsigned.ipa
+          echo "✅ IPA created successfully"
 
     artifacts:
       - $CM_BUILD_DIR/BVApp-unsigned.ipa
