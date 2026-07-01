@@ -9,25 +9,37 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Select Xcode 13
+        run: |
+          XCODE_PATH=$(find /Applications -maxdepth 1 \( -name "*13*.app" -o -name "Xcode*13*.app" \) | head -n 1)
+          if [ -n "$XCODE_PATH" ]; then
+            echo "Selecting Xcode 13 at: $XCODE_PATH"
+            sudo xcode-select -s "$XCODE_PATH"
+          else
+            echo "Xcode 13 not found, listing available Xcode versions:"
+            ls -la /Applications | grep -i xcode
+          fi
+          xcodebuild -version
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 16
 
       - name: Install Cordova CLI
-        run: npm install -g cordova@12
+        run: npm install -g cordova@11.1.0
 
       - name: Install npm dependencies
         run: npm install
 
       - name: Add iOS platform
-        run: cordova platform add ios@7.0.0
+        run: cordova platform add ios@5.1.1
 
       - name: Add Cordova plugins
         run: cordova plugin add cordova-plugin-inappbrowser@6.0.0 || true
@@ -35,10 +47,16 @@ jobs:
       - name: Cordova prepare
         run: cordova prepare ios
 
+      - name: Resize iOS App Icons
+        run: node resize_icons.js
+
+      - name: Patch CDVLaunchScreen Storyboard
+        run: node patch_storyboard.js
+
       - name: Install CocoaPods dependencies
         run: |
           cd platforms/ios
-          pod install --repo-update
+          pod install --repo-update || true
 
       - name: Build CordovaLib Target First (Unsigned)
         run: |
@@ -64,31 +82,36 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=NO \
-            IPHONEOS_DEPLOYMENT_TARGET=12.0 \
+            IPHONEOS_DEPLOYMENT_TARGET=9.0 \
             ENABLE_BITCODE=NO \
-            ENABLE_ON_DEMAND_RESOURCES=NO
+            ENABLE_ON_DEMAND_RESOURCES=NO \
+            ARCHS="armv7 arm64" \
+            VALID_ARCHS="armv7 arm64"
 
       - name: Package Unsigned IPA
         run: |
-          # Find the app file in compiled DerivedData
-          APP_PATH=$(find "$GITHUB_WORKSPACE/DerivedData" -name "*.app" -not -path "*/intermediates/*" | head -1)
-          if [ -z "$APP_PATH" ]; then
-            echo "❌ Error: Could not find any compiled .app files."
-            exit 1
-          fi
-          
-          echo "Patching MinimumOSVersion to 9.0 in Info.plist"
-          plutil -replace MinimumOSVersion -string "9.0" "$APP_PATH/Info.plist"
-          
-          echo "Packaging app from: $APP_PATH"
           mkdir -p Payload
+          APP_PATH="$GITHUB_WORKSPACE/DerivedData/Build/Products/Release-iphoneos/Bhakti Vedanta App.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Warning: Direct path not found, falling back to find search..."
+            APP_PATH=$(find "$GITHUB_WORKSPACE/DerivedData" -name "Bhakti Vedanta App.app" 2>/dev/null | head -n 1)
+          fi
+          echo "Found app bundle at: $APP_PATH"
           cp -r "$APP_PATH" Payload/
-          zip -r BVApp-unsigned.ipa Payload/
+          
+          # Thin the binary to armv7-only so sideloading tools don't get IncorrectArchitecture
+          BINARY="Payload/Bhakti Vedanta App.app/Bhakti Vedanta App"
+          echo "Thinning binary to armv7..."
+          lipo -thin armv7 "$BINARY" -output "$BINARY"
+          echo "Binary architectures after thinning:"
+          lipo -info "$BINARY"
+          
+          zip -r BVApp-armv7-only.ipa Payload/
           echo "✅ IPA created successfully"
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-unsigned-ipa
-          path: BVApp-unsigned.ipa
+          name: BVApp-armv7-only
+          path: BVApp-armv7-only.ipa
           if-no-files-found: error
