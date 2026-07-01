@@ -9,7 +9,7 @@ workflows:
     max_build_duration: 60
 
     environment:
-      xcode: 9.4.1
+      xcode: 15.4       # Latest supported Xcode on Codemagic
       node: 16
       vars:
         BUNDLE_ID: "com.bvapp.bhaktivedanta"
@@ -55,6 +55,7 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            IPHONEOS_DEPLOYMENT_TARGET=9.0 \
             build
 
       # 7. Package .app into unsigned .ipa
