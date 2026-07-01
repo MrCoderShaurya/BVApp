@@ -13,7 +13,7 @@
   "author": "MrCoderShaurya",
   "license": "Apache-2.0",
   "dependencies": {
-    "cordova-plugin-inappbrowser": "^6.0.0"
+    "cordova-plugin-inappbrowser": "3.2.0"
   },
   "devDependencies": {},
   "cordova": {

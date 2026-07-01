@@ -30,7 +30,7 @@ jobs:
         run: cordova platform add ios@7.0.0
 
       - name: Add Cordova plugins
-        run: cordova plugin add cordova-plugin-inappbrowser@6.0.0 || true
+        run: cordova plugin add cordova-plugin-inappbrowser@3.2.0 || true
 
       - name: Cordova prepare
         run: cordova prepare ios
