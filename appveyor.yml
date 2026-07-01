@@ -11,8 +11,16 @@ install:
   - cordova prepare ios
 
 build_script:
-  # Switch active Xcode to 13.4.1 (which supports armv7 32-bit architecture)
-  - sudo xcode-select -s /Applications/Xcode_13.4.1.app
+  # Automatically find and select any Xcode 13.x app
+  - |
+    XCODE_PATH=$(find /Applications -maxdepth 1 \( -name "*13*.app" -o -name "Xcode*13*.app" \) | head -n 1)
+    if [ -z "$XCODE_PATH" ]; then
+      echo "--- ERROR: Xcode 13 not found! Listing all Xcode apps in /Applications ---"
+      ls -la /Applications | grep -i xcode
+      exit 1
+    fi
+    echo "Found Xcode 13 at: $XCODE_PATH"
+    sudo xcode-select -s "$XCODE_PATH"
   - xcodebuild -version
 
   # Build CordovaLib dependency first
