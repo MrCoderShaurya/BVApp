@@ -4,7 +4,7 @@
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
     <name>Meet Notes App</name>
-    <icon src="www/img/bvicon.png" />
+    <icon src="www/img/zmicon.png" />
     <description>
         Zoom, Google Meet and Notes App for legacy iOS devices.
     </description>
@@ -40,7 +40,7 @@
     <platform name="ios">
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
-        <icon src="www/img/bvicon.png" />
+        <icon src="www/img/zmicon.png" />
         <preference name="deployment-target" value="9.0" />
         <preference name="AllowInlineMediaPlayback" value="true" />
         <preference name="MediaPlaybackRequiresUserAction" value="false" />

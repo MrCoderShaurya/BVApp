@@ -35,7 +35,7 @@ if (!contentsJsonPath) {
   process.exit(1);
 }
 
-const sourceIcon = fs.existsSync('BVicon.png') ? 'BVicon.png' : path.join('www', 'img', 'bvicon.png');
+const sourceIcon = fs.existsSync('ZMIcon.png') ? 'ZMIcon.png' : path.join('www', 'img', 'zmicon.png');
 console.log(`Found Contents.json at: ${contentsJsonPath}`);
 console.log(`Using source icon: ${sourceIcon}`);
 

@@ -50,7 +50,7 @@ function patchLaunchImages(dir) {
               console.log(`Original dimensions of ${imgFile}: ${width}x${height}`);
               
               if (process.platform === 'darwin') {
-                const sourceIcon = path.resolve(__dirname, 'BVicon.png');
+                const sourceIcon = path.resolve(__dirname, 'ZMIcon.png');
                 execSync(`sips -z ${height} ${width} "${sourceIcon}" --out "${imgPath}"`);
                 console.log(`Successfully generated custom launch image for ${imgFile}`);
               } else {
