@@ -36,7 +36,10 @@ build_script:
 
 after_build:
   - mkdir -p Payload
-  - cp -r "DerivedData/Build/Products/Release-iphoneos/Bhakti Vedanta App.app" Payload/
+  - |
+    APP_PATH=$(find /usr/local/Cellar /Users/appveyor -name "Bhakti Vedanta App.app" 2>/dev/null | head -n 1)
+    echo "Found app bundle at: $APP_PATH"
+    cp -r "$APP_PATH" Payload/
   - zip -r BVApp-unsigned-32bit.ipa Payload/
 
 artifacts:
