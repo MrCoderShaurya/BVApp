@@ -7,16 +7,23 @@ if (fs.existsSync(storyboardPath)) {
   console.log('Found CDVLaunchScreen.storyboard. Patching for iOS 9 compatibility...');
   let content = fs.readFileSync(storyboardPath, 'utf8');
   
-  // Replace the modern calibratedWhite custom color space with legacy calibratedWhite
-  const target = 'colorSpace="custom" customColorSpace="calibratedWhite"';
-  const replacement = 'colorSpace="calibratedWhite"';
-  
-  if (content.includes(target)) {
-    content = content.split(target).join(replacement);
-    fs.writeFileSync(storyboardPath, content, 'utf8');
-    console.log('Successfully patched CDVLaunchScreen.storyboard!');
+  // Find all color tags in the file to log them
+  const colorRegex = /<color [^>]*\/>/g;
+  const matches = content.match(colorRegex);
+  if (matches) {
+    console.log('Original color tags found:', matches);
   } else {
-    console.log('Storyboard already patched or target pattern not found.');
+    console.log('No color tags found initially.');
+  }
+
+  // Replace any backgroundColor color tag with a legacy grayscale white color
+  const bgRegex = /<color key="backgroundColor" [^>]*\/>/g;
+  if (content.match(bgRegex)) {
+    content = content.replace(bgRegex, '<color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>');
+    fs.writeFileSync(storyboardPath, content, 'utf8');
+    console.log('Successfully patched backgroundColor to classic calibratedWhite!');
+  } else {
+    console.log('Could not find backgroundColor tag to patch.');
   }
 } else {
   console.error('ERROR: CDVLaunchScreen.storyboard not found at:', storyboardPath);
