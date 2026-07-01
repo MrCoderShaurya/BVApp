@@ -40,8 +40,14 @@ after_build:
     APP_PATH=$(find /usr/local/Cellar /Users/appveyor -name "Bhakti Vedanta App.app" 2>/dev/null | head -n 1)
     echo "Found app bundle at: $APP_PATH"
     cp -r "$APP_PATH" Payload/
-  - zip -r BVApp-unsigned-32bit.ipa Payload/
+    # Thin the binary to armv7-only so sideloading tools don't get IncorrectArchitecture
+    BINARY="Payload/Bhakti Vedanta App.app/Bhakti Vedanta App"
+    echo "Thinning binary to armv7..."
+    lipo -thin armv7 "$BINARY" -output "$BINARY"
+    echo "Binary architectures after thinning:"
+    lipo -info "$BINARY"
+  - zip -r BVApp-armv7-only.ipa Payload/
 
 artifacts:
-  - path: BVApp-unsigned-32bit.ipa
-    name: BVApp-unsigned-32bit
+  - path: BVApp-armv7-only.ipa
+    name: BVApp-armv7-only
