@@ -36,7 +36,8 @@ var WEBVIEW_URLS = {
     lectures: 'https://audio.iskcondesiretree.com/',
     bhajans: 'https://audio.iskcondesiretree.com/index.php?q=f&f=%2F05_-_ISKCON_Chowpatty%2F00_-_Bhajans%2F01_-_Vaishnava_Bhajans',
     reading: 'https://vedabase.io/en/',
-    calendar: 'http://www.vaisnavacalendar.com/197/'
+    calendar: 'http://www.vaisnavacalendar.com/197/',
+    radheshyam: 'https://radheshyamdas.com/'
 };
 
 // Preconfigured Quick Bookmarks
@@ -68,7 +69,7 @@ var BVApp = {
         var self = this;
         if (!navigator.onLine) return;
 
-        var remoteTabs = ['lectures', 'bhajans', 'reading', 'calendar'];
+        var remoteTabs = ['lectures', 'bhajans', 'reading', 'calendar', 'radheshyam'];
         for (var idx = 0; idx < remoteTabs.length; idx++) {
             (function(tabId, index) {
                 setTimeout(function() {
@@ -648,10 +649,11 @@ var BVApp = {
             else if (tabId === 'bhajans') titleNode.innerText = 'Bhajans';
             else if (tabId === 'reading') titleNode.innerText = 'Reading';
             else if (tabId === 'calendar') titleNode.innerText = 'Calendar';
+            else if (tabId === 'radheshyam') titleNode.innerText = 'Radheshyam Das';
         }
 
         // 4. Trigger iframe load for remote tabs (with connectivity support)
-        if (tabId === 'lectures' || tabId === 'bhajans' || tabId === 'reading' || tabId === 'calendar') {
+        if (tabId === 'lectures' || tabId === 'bhajans' || tabId === 'reading' || tabId === 'calendar' || tabId === 'radheshyam') {
             var onlinePanel = document.querySelector('#view-' + tabId + ' .online-state');
             var offlinePanel = document.querySelector('#view-' + tabId + ' .offline-state');
 
@@ -710,7 +712,7 @@ var BVApp = {
 
     refreshActiveView: function() {
         var tabId = appState.activeTab;
-        if (tabId === 'lectures' || tabId === 'bhajans' || tabId === 'reading' || tabId === 'calendar') {
+        if (tabId === 'lectures' || tabId === 'bhajans' || tabId === 'reading' || tabId === 'calendar' || tabId === 'radheshyam') {
             var iframe = document.getElementById('iframe-' + tabId);
             if (iframe) {
                 // Show loader again

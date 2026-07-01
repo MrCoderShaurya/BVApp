@@ -18,6 +18,40 @@ function findStoryboard(dir) {
 }
 
 const iosDir = path.join('platforms', 'ios');
+
+// 1. Solid white 1x1 pixel PNG to replace default Cordova robot launch screens
+const whitePngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+const whiteBuffer = Buffer.from(whitePngBase64, 'base64');
+
+function patchLaunchImages(dir) {
+  if (!fs.existsSync(dir)) return;
+  const files = fs.readdirSync(dir);
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      if (file === 'LaunchImage.launchimage') {
+        console.log(`Found legacy LaunchImage asset folder at: ${fullPath}. Overwriting default launch PNG files...`);
+        const imgFiles = fs.readdirSync(fullPath);
+        for (let j = 0; j < imgFiles.length; j++) {
+          const imgFile = imgFiles[j];
+          if (imgFile.toLowerCase().endsWith('.png')) {
+            const imgPath = path.join(fullPath, imgFile);
+            fs.writeFileSync(imgPath, whiteBuffer);
+            console.log(`Cleared legacy launch image: ${imgFile}`);
+          }
+        }
+      } else {
+        patchLaunchImages(fullPath);
+      }
+    }
+  }
+}
+
+// Clear all legacy launch images of the robot logo
+patchLaunchImages(iosDir);
+
 const storyboardPath = findStoryboard(iosDir);
 
 if (storyboardPath && fs.existsSync(storyboardPath)) {

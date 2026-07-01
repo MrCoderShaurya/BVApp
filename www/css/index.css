@@ -413,6 +413,7 @@ body.dark-mode .quote-card {
 .reading-color { background-color: rgba(159, 122, 234, 0.12); color: #9f7aea; }
 .calendar-color { background-color: rgba(56, 178, 172, 0.12); color: #38b2ac; }
 .notes-color { background-color: rgba(236, 110, 173, 0.12); color: #ec6ead; }
+.radheshyam-color { background-color: rgba(72, 187, 120, 0.12); color: #48bb78; }
 
 .dash-info h3 {
     margin: 0 0 4px;
