@@ -32,23 +32,46 @@ jobs:
       - name: Add Cordova plugins
         run: cordova plugin add cordova-plugin-inappbrowser@6.0.0 || true
 
-      - name: Build iOS App (Unsigned)
+      - name: Cordova prepare
+        run: cordova prepare ios
+
+      - name: Install CocoaPods dependencies
         run: |
-          cordova build ios --release --device \
-            --buildFlag="-CODE_SIGNING_ALLOWED=NO" \
-            --buildFlag="-CODE_SIGNING_REQUIRED=NO" \
-            --buildFlag="-CODE_SIGN_IDENTITY=''" \
-            --buildFlag="AD_HOC_CODE_SIGNING_ALLOWED=NO"
+          cd platforms/ios
+          pod install --repo-update
+
+      - name: Build CordovaLib Target First (Unsigned)
+        run: |
+          xcodebuild \
+            -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" \
+            -scheme "CordovaLib" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$GITHUB_WORKSPACE/DerivedData" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build Main App Target (Unsigned)
+        run: |
+          xcodebuild \
+            -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" \
+            -scheme "Bhakti Vedanta App" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$GITHUB_WORKSPACE/DerivedData" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            AD_HOC_CODE_SIGNING_ALLOWED=NO \
+            IPHONEOS_DEPLOYMENT_TARGET=12.0 \
+            ENABLE_BITCODE=NO \
+            ENABLE_ON_DEMAND_RESOURCES=NO
 
       - name: Package Unsigned IPA
         run: |
-          # Find the app file in standard locations
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -not -path "*/intermediates/*" | head -1)
-          if [ -z "$APP_PATH" ]; then
-            echo "Searching workspace..."
-            APP_PATH=$(find platforms/ios -name "*.app" -not -path "*/intermediates/*" | head -1)
-          fi
-          
+          # Find the app file in compiled DerivedData
+          APP_PATH=$(find "$GITHUB_WORKSPACE/DerivedData" -name "*.app" -not -path "*/intermediates/*" | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "❌ Error: Could not find any compiled .app files."
             exit 1
