@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.bvapp.bhaktivedanta" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.bvapp.bhaktivedanta" version="1.0.0"
+    xmlns="http://www.w3.org/ns/widgets"
+    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
     <name>Bhakti Vedanta App</name>
     <icon src="BVicon.png" />
     <description>
@@ -8,8 +11,10 @@
     <author email="mrcodershaurya@gmail.com" href="https://github.com/MrCoderShaurya">
         MrCoderShaurya
     </author>
+
     <content src="index.html" />
-    <plugin name="cordova-plugin-whitelist" spec="1" />
+
+    <!-- Network access -->
     <access origin="*" />
     <allow-navigation href="https://audio.iskcondesiretree.com/*" />
     <allow-navigation href="https://vedabase.io/*" />
@@ -23,16 +28,20 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
+
+    <!-- Android -->
     <platform name="android">
         <allow-intent href="market:*" />
     </platform>
+
+    <!-- iOS — targets iOS 12+ (minimum supported by modern Xcode) -->
     <platform name="ios">
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
-        <!-- iOS 9.3.5 jailbroken iPad compatibility settings -->
-        <preference name="deployment-target" value="9.3" />
+        <preference name="deployment-target" value="12.0" />
         <preference name="AllowInlineMediaPlayback" value="true" />
         <preference name="MediaPlaybackRequiresUserAction" value="false" />
-        <preference name="UIWebViewDecelerationSpeed" value="fast" />
+        <preference name="WKWebViewOnly" value="true" />
     </platform>
+
 </widget>

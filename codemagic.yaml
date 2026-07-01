@@ -1,49 +1,51 @@
 workflows:
 
   # ============================================================
-  # iOS UNSIGNED BUILD — No Apple Developer Account Needed
-  # Produces an unsigned .ipa you can install via Sideloadly
+  # iOS UNSIGNED BUILD
+  # Uses cordova-ios 7.x + Xcode 16 (fully supported)
+  # Output: unsigned .ipa → install with Sideloadly (free)
   # ============================================================
   ios-adhoc:
-    name: iOS Unsigned Build (Sideload via Sideloadly)
+    name: iOS Unsigned Build (Install via Sideloadly)
     max_build_duration: 60
 
     environment:
-      xcode: 15.4       # Latest supported Xcode on Codemagic
-      node: 16
+      xcode: latest     # Always picks highest supported Xcode
+      node: 18
       vars:
         BUNDLE_ID: "com.bvapp.bhaktivedanta"
         XCODE_SCHEME: "Bhakti Vedanta App"
 
     scripts:
-      # 1. Install Cordova CLI
+
+      - name: Print Xcode version
+        script: xcodebuild -version
+
       - name: Install Cordova CLI
         script: |
-          npm install -g cordova@9.0.0
+          npm install -g cordova@12
 
-      # 2. Install npm dependencies
       - name: Install npm dependencies
         script: |
           npm install
 
-      # 3. Add iOS platform
-      - name: Add iOS platform
+      - name: Remove old iOS platform if present
         script: |
-          cordova platform add ios@4.5.5 || echo "Platform already added"
+          cordova platform remove ios || true
 
-      # 4. Add required plugins
+      - name: Add iOS platform (cordova-ios 7 - works with Xcode 15/16)
+        script: |
+          cordova platform add ios@7.0.0
+
       - name: Add Cordova plugins
         script: |
-          cordova plugin add cordova-plugin-whitelist@1.3.5 || true
-          cordova plugin add cordova-plugin-inappbrowser@3.2.0 || true
+          cordova plugin add cordova-plugin-inappbrowser@6.0.0 || true
 
-      # 5. Cordova Prepare
-      - name: Cordova Prepare iOS
+      - name: Cordova prepare iOS
         script: |
           cordova prepare ios
 
-      # 6. Build unsigned .app (no signing)
-      - name: Build iOS (unsigned)
+      - name: Build unsigned .app
         script: |
           xcodebuild \
             -project "platforms/ios/Bhakti Vedanta App.xcodeproj" \
@@ -55,46 +57,48 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-            IPHONEOS_DEPLOYMENT_TARGET=9.0 \
             build
 
-      # 7. Package .app into unsigned .ipa
-      - name: Package unsigned IPA
+      - name: Package into unsigned .ipa
         script: |
-          APP_PATH=$(find "$CM_BUILD_DIR/DerivedData" -name "*.app" | head -1)
+          APP_PATH=$(find "$CM_BUILD_DIR/DerivedData" -name "*.app" -not -path "*/intermediates/*" | head -1)
+          echo "Found .app at: $APP_PATH"
           mkdir -p "$CM_BUILD_DIR/Payload"
           cp -r "$APP_PATH" "$CM_BUILD_DIR/Payload/"
           cd "$CM_BUILD_DIR"
           zip -r BVApp-unsigned.ipa Payload/
+          echo "IPA created: $CM_BUILD_DIR/BVApp-unsigned.ipa"
 
     artifacts:
       - $CM_BUILD_DIR/BVApp-unsigned.ipa
 
   # ============================================================
-  # ANDROID DEBUG BUILD — No signing needed
+  # ANDROID DEBUG BUILD
   # ============================================================
   android-debug:
-    name: Android Debug Build
+    name: Android Debug APK
     max_build_duration: 30
 
     environment:
-      node: 16
-      java: 11
+      node: 18
+      java: 17
 
     scripts:
       - name: Install Cordova CLI
-        script: npm install -g cordova@9.0.0
+        script: npm install -g cordova@12
 
       - name: Install npm dependencies
         script: npm install
 
-      - name: Add Android platform
-        script: cordova platform add android || echo "Already added"
+      - name: Remove old Android platform
+        script: cordova platform remove android || true
 
-      - name: Add Cordova plugins
+      - name: Add Android platform
+        script: cordova platform add android
+
+      - name: Add plugins
         script: |
-          cordova plugin add cordova-plugin-whitelist@1.3.5 || true
-          cordova plugin add cordova-plugin-inappbrowser@3.2.0 || true
+          cordova plugin add cordova-plugin-inappbrowser@6.0.0 || true
 
       - name: Build Android debug APK
         script: cordova build android --debug
