@@ -1,8 +1,8 @@
 {
-  "name": "com.bvapp.bhaktivedanta",
-  "displayName": "Bhakti Vedanta App",
+  "name": "com.mrcodershaurya.meetnotes",
+  "displayName": "Meet Notes App",
   "version": "1.0.0",
-  "description": "Bhakti Vedanta App - A spiritual resource app for audio, calendar, and scripture.",
+  "description": "Zoom, Google Meet and Notes App for legacy iOS devices.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

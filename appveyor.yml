@@ -1,4 +1,4 @@
-image: macos-monterey
+image:macos-monterey
 
 environment:
   NODE_VERSION: "16"
@@ -30,21 +30,21 @@ build_script:
   - xcodebuild -version
 
   # Build the main app (cordova-ios 5.x links CordovaLib as a static library automatically)
-  - xcodebuild -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" -scheme "Bhakti Vedanta App" -configuration Release -sdk iphoneos -derivedDataPath "$PWD/DerivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO AD_HOC_CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=9.0 ENABLE_BITCODE=NO ENABLE_ON_DEMAND_RESOURCES=NO ARCHS="armv7 arm64" VALID_ARCHS="armv7 arm64"
+  - xcodebuild -workspace "platforms/ios/Meet Notes App.xcworkspace" -scheme "Meet Notes App" -configuration Release -sdk iphoneos -derivedDataPath "$PWD/DerivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO AD_HOC_CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=9.0 ENABLE_BITCODE=NO ENABLE_ON_DEMAND_RESOURCES=NO ARCHS="armv7 arm64" VALID_ARCHS="armv7 arm64"
 
 
 after_build:
   - mkdir -p Payload
   - |
-    APP_PATH="$PWD/DerivedData/Build/Products/Release-iphoneos/Bhakti Vedanta App.app"
+    APP_PATH="$PWD/DerivedData/Build/Products/Release-iphoneos/Meet Notes App.app"
     if [ ! -d "$APP_PATH" ]; then
       echo "Warning: Direct path not found, falling back to find search..."
-      APP_PATH=$(find /usr/local/Cellar /Users/appveyor -name "Bhakti Vedanta App.app" 2>/dev/null | head -n 1)
+      APP_PATH=$(find /usr/local/Cellar /Users/appveyor -name "Meet Notes App.app" 2>/dev/null | head -n 1)
     fi
     echo "Found app bundle at: $APP_PATH"
     cp -r "$APP_PATH" Payload/
     # Thin the binary to armv7-only so sideloading tools don't get IncorrectArchitecture
-    BINARY="Payload/Bhakti Vedanta App.app/Bhakti Vedanta App"
+    BINARY="Payload/Meet Notes App.app/Meet Notes App"
     echo "Thinning binary to armv7..."
     lipo -thin armv7 "$BINARY" -output "$BINARY"
     echo "Binary architectures after thinning:"
