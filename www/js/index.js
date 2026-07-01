@@ -2,6 +2,13 @@
    BVApp - Core Application Logic (Strict ES5 for iOS 9.3.5 Compatibility)
    ========================================================================== */
 
+window.onerror = function(msg, url, line, col, error) {
+    var extra = !col ? '' : '\ncolumn: ' + col;
+    extra += !error ? '' : '\nerror: ' + error;
+    alert("JS ERROR:\n" + msg + "\nurl: " + url + "\nline: " + line + extra);
+    return false;
+};
+
 var appState = {
     activeTab: 'dashboard',
     previousLocalTab: 'dashboard',
