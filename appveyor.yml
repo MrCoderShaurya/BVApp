@@ -12,7 +12,7 @@ install:
 
 build_script:
   # Switch active Xcode to 13.4.1 (which supports armv7 32-bit architecture)
-  - sudo xcode-select -s /Applications/Xcode_13.4.1.app/Contents/Developer
+  - sudo xcode-select -s /Applications/Xcode_13.4.1.app
   - xcodebuild -version
 
   # Build CordovaLib dependency first
