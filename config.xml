@@ -42,6 +42,7 @@
         <preference name="deployment-target" value="9.0" />
         <preference name="AllowInlineMediaPlayback" value="true" />
         <preference name="MediaPlaybackRequiresUserAction" value="false" />
+        <preference name="UIWebViewDecelerationSpeed" value="fast" />
     </platform>
 
 </widget>

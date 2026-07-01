@@ -64,6 +64,44 @@ var BVApp = {
         this.initTheme();
     },
 
+    preloadIframes: function() {
+        var self = this;
+        if (!navigator.onLine) return;
+
+        var remoteTabs = ['lectures', 'bhajans', 'reading', 'calendar'];
+        for (var idx = 0; idx < remoteTabs.length; idx++) {
+            (function(tabId, index) {
+                setTimeout(function() {
+                    var iframe = document.getElementById('iframe-' + tabId);
+                    if (iframe && iframe.getAttribute('data-loaded') !== 'true') {
+                        var targetUrl = localStorage.getItem('bv_last_url_' + tabId) || WEBVIEW_URLS[tabId];
+                        iframe.setAttribute('data-loaded', 'true');
+                        
+                        // Setup spinner
+                        var spinner = document.getElementById('spinner-' + tabId);
+                        if (spinner) {
+                            spinner.style.opacity = '1';
+                            spinner.classList.remove('hidden');
+                        }
+                        if (!iframe.getAttribute('data-bound')) {
+                            iframe.setAttribute('data-bound', 'true');
+                            iframe.onload = function() {
+                                var sNode = document.getElementById('spinner-' + tabId);
+                                if (sNode) {
+                                    sNode.style.opacity = '0';
+                                    setTimeout(function() {
+                                        sNode.classList.add('hidden');
+                                    }, 300);
+                                }
+                            };
+                        }
+                        iframe.src = targetUrl;
+                    }
+                }, 1000 + (index * 800)); // Stagger by 800ms
+            })(remoteTabs[idx], idx);
+        }
+    },
+
     onDeviceReady: function() {
         var self = this;
 
@@ -85,6 +123,7 @@ var BVApp = {
         this.renderBookmarks();
         this.bindEvents();
         this.initCanvasEvents();
+        this.preloadIframes();
 
         // Hide Splash Screen after 0.6 seconds (600ms) for much faster startup
         setTimeout(function() {
