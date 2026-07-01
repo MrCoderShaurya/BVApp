@@ -1,5 +1,16 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
+
+function getPngDimensions(filePath) {
+  const fd = fs.openSync(filePath, 'r');
+  const buffer = Buffer.alloc(8);
+  fs.readSync(fd, buffer, 0, 8, 16); // Read 8 bytes starting at offset 16 (width and height in IHDR chunk)
+  fs.closeSync(fd);
+  const width = buffer.readInt32BE(0);
+  const height = buffer.readInt32BE(4);
+  return { width, height };
+}
 
 function findStoryboard(dir) {
   if (!fs.existsSync(dir)) return null;
@@ -19,10 +30,6 @@ function findStoryboard(dir) {
 
 const iosDir = path.join('platforms', 'ios');
 
-// 1. Solid white 1x1 pixel PNG to replace default Cordova robot launch screens
-const whitePngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-const whiteBuffer = Buffer.from(whitePngBase64, 'base64');
-
 function patchLaunchImages(dir) {
   if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
@@ -32,14 +39,26 @@ function patchLaunchImages(dir) {
     const stat = fs.statSync(fullPath);
     if (stat.isDirectory()) {
       if (file === 'LaunchImage.launchimage') {
-        console.log(`Found legacy LaunchImage asset folder at: ${fullPath}. Overwriting default launch PNG files...`);
+        console.log(`Found legacy LaunchImage asset folder at: ${fullPath}`);
         const imgFiles = fs.readdirSync(fullPath);
         for (let j = 0; j < imgFiles.length; j++) {
           const imgFile = imgFiles[j];
           if (imgFile.toLowerCase().endsWith('.png')) {
             const imgPath = path.join(fullPath, imgFile);
-            fs.writeFileSync(imgPath, whiteBuffer);
-            console.log(`Cleared legacy launch image: ${imgFile}`);
+            try {
+              const { width, height } = getPngDimensions(imgPath);
+              console.log(`Original dimensions of ${imgFile}: ${width}x${height}`);
+              
+              if (process.platform === 'darwin') {
+                const sourceIcon = path.resolve(__dirname, 'BVicon.png');
+                execSync(`sips -z ${height} ${width} "${sourceIcon}" --out "${imgPath}"`);
+                console.log(`Successfully generated custom launch image for ${imgFile}`);
+              } else {
+                console.log(`Not on macOS. Skipping sips resizing for ${imgFile}`);
+              }
+            } catch (e) {
+              console.error(`Failed to resize launch image ${imgFile}:`, e.message);
+            }
           }
         }
       } else {
@@ -49,7 +68,7 @@ function patchLaunchImages(dir) {
   }
 }
 
-// Clear all legacy launch images of the robot logo
+// Clear all legacy launch images of the robot logo and replace with custom BVicon.png
 patchLaunchImages(iosDir);
 
 const storyboardPath = findStoryboard(iosDir);
@@ -63,8 +82,6 @@ if (storyboardPath && fs.existsSync(storyboardPath)) {
   const matches = content.match(colorRegex);
   if (matches) {
     console.log('Original color tags found:', matches);
-  } else {
-    console.log('No color tags found initially.');
   }
 
   // Replace any backgroundColor color tag with a legacy grayscale white color
