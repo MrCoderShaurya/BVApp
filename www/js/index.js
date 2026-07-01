@@ -234,6 +234,12 @@ var BVApp = {
         });
 
         // Unified Ribbon Tool Selection row click handlers
+        var btnToolText = document.getElementById('btn-tool-text');
+        if (btnToolText) {
+            btnToolText.addEventListener('click', function() {
+                self.setActiveTool('text');
+            });
+        }
         document.getElementById('btn-tool-pen').addEventListener('click', function() {
             self.setActiveTool('pen');
         });
@@ -246,6 +252,63 @@ var BVApp = {
                 self.clearCanvas();
             }
         });
+
+        // Text formatting control event listeners
+        var btnTextBold = document.getElementById('btn-text-bold');
+        if (btnTextBold) {
+            btnTextBold.addEventListener('click', function() {
+                var note = self.findNoteById(appState.activeNoteId);
+                if (note) {
+                    note.bold = !note.bold;
+                    if (note.bold) this.classList.add('active');
+                    else this.classList.remove('active');
+                    self.applyTextFormatting(note);
+                    self.triggerAutoSave();
+                }
+            });
+        }
+
+        var btnTextItalic = document.getElementById('btn-text-italic');
+        if (btnTextItalic) {
+            btnTextItalic.addEventListener('click', function() {
+                var note = self.findNoteById(appState.activeNoteId);
+                if (note) {
+                    note.italic = !note.italic;
+                    if (note.italic) this.classList.add('active');
+                    else this.classList.remove('active');
+                    self.applyTextFormatting(note);
+                    self.triggerAutoSave();
+                }
+            });
+        }
+
+        var selectTextSize = document.getElementById('select-text-size');
+        if (selectTextSize) {
+            selectTextSize.addEventListener('change', function() {
+                var note = self.findNoteById(appState.activeNoteId);
+                if (note) {
+                    note.fontSize = this.value;
+                    self.applyTextFormatting(note);
+                    self.triggerAutoSave();
+                }
+            });
+        }
+
+        var textSwatches = document.querySelectorAll('.text-color-swatch');
+        for (var i = 0; i < textSwatches.length; i++) {
+            textSwatches[i].addEventListener('click', function() {
+                var note = self.findNoteById(appState.activeNoteId);
+                if (note) {
+                    for (var j = 0; j < textSwatches.length; j++) {
+                        textSwatches[j].classList.remove('active');
+                    }
+                    this.classList.add('active');
+                    note.textColor = this.getAttribute('data-color');
+                    self.applyTextFormatting(note);
+                    self.triggerAutoSave();
+                }
+            });
+        }
 
         // Notes Editor inputs (for auto-saving)
         var titleField = document.getElementById('note-title-input');
@@ -343,23 +406,30 @@ var BVApp = {
     setActiveTool: function(toolName) {
         appState.activeTool = toolName;
         
+        var btnText = document.getElementById('btn-tool-text');
         var btnPen = document.getElementById('btn-tool-pen');
         var btnEraser = document.getElementById('btn-tool-eraser');
 
+        if (btnText) btnText.classList.remove('active');
         if (btnPen) btnPen.classList.remove('active');
         if (btnEraser) btnEraser.classList.remove('active');
 
-        if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
+        if (toolName === 'text' && btnText) btnText.classList.add('active');
+        else if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
         else if (toolName === 'eraser' && btnEraser) btnEraser.classList.add('active');
 
         // Toggle Formatting Trays
+        var trayText = document.getElementById('format-tray-text');
         var trayDraw = document.getElementById('format-tray-draw');
         var trayEraser = document.getElementById('format-tray-eraser');
 
+        if (trayText) trayText.classList.add('hidden');
         if (trayDraw) trayDraw.classList.add('hidden');
         if (trayEraser) trayEraser.classList.add('hidden');
 
-        if (toolName === 'pen') {
+        if (toolName === 'text') {
+            if (trayText) trayText.classList.remove('hidden');
+        } else if (toolName === 'pen') {
             if (trayDraw) trayDraw.classList.remove('hidden');
         } else if (toolName === 'eraser') {
             if (trayEraser) trayEraser.classList.remove('hidden');
@@ -1427,6 +1497,23 @@ var BVApp = {
             } else {
                 viz.classList.remove('playing');
             }
+        }
+    },
+
+    applyTextFormatting: function(note) {
+        var textarea = this.noteContentInput;
+        if (!textarea) return;
+        
+        if (note) {
+            textarea.style.fontWeight = note.bold ? 'bold' : 'normal';
+            textarea.style.fontStyle = note.italic ? 'italic' : 'normal';
+            textarea.style.fontSize = note.fontSize || '15px';
+            textarea.style.color = note.textColor || '#2d3748';
+        } else {
+            textarea.style.fontWeight = 'normal';
+            textarea.style.fontStyle = 'normal';
+            textarea.style.fontSize = '15px';
+            textarea.style.color = '#2d3748';
         }
     },
 
