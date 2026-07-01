@@ -13,12 +13,14 @@
   "author": "MrCoderShaurya",
   "license": "Apache-2.0",
   "dependencies": {
-    "cordova-plugin-inappbrowser": "3.2.0"
+    "cordova-plugin-inappbrowser": "3.2.0",
+    "cordova-plugin-volume-control": "^1.0.1"
   },
   "devDependencies": {},
   "cordova": {
     "plugins": {
-      "cordova-plugin-inappbrowser": {}
+      "cordova-plugin-inappbrowser": {},
+      "cordova-plugin-volume-control": {}
     },
     "platforms": [
       "ios",

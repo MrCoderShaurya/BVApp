@@ -50,6 +50,6 @@
         <preference name="DisallowOverscroll" value="true" />
         <preference name="UIWebViewBounce" value="false" />
         <preference name="EnableViewportScale" value="true" />
-    </platform>
+    </platform>    <plugin name="cordova-plugin-volume-control" />
 
 </widget>

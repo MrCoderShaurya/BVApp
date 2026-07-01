@@ -412,62 +412,39 @@
                     </table>
                 </div>
             </div>
-        <!-- Section 6: Audio Volume Booster -->
+        <!-- Section 6: System Volume Control -->
         <section id="view-booster" class="content-view">
             <div class="booster-container">
                 <div class="booster-card">
-                    <h2 class="booster-title">Audio Volume Booster</h2>
-                    <p class="booster-subtitle">Boost audio volume up to 300% using Web Audio API</p>
+                    <h2 class="booster-title">Volume Control</h2>
+                    <p class="booster-subtitle">Adjust your device's system playback and media volume</p>
                     
                     <div class="booster-viz-wrapper">
-                        <div id="booster-visualizer-circle" class="booster-viz">
+                        <div id="volume-visualizer-circle" class="booster-viz">
                             <svg viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                                <path fill="currentColor" id="volume-icon-path" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
                             </svg>
                         </div>
                     </div>
 
                     <div class="booster-slider-group">
                         <div class="booster-slider-label">
-                            <span>Booster Level (Gain)</span>
-                            <span id="booster-gain-value" class="val">100%</span>
+                            <span>System Volume</span>
+                            <span id="system-volume-value" class="val">50%</span>
                         </div>
-                        <input type="range" id="slider-booster-gain" class="booster-slider" min="100" max="300" value="100">
-                    </div>
-
-                    <div class="booster-slider-group">
-                        <div class="booster-slider-label">
-                            <span id="booster-time-display">0:00 / 0:00</span>
-                        </div>
-                        <input type="range" id="slider-booster-progress" class="booster-slider" min="0" max="100" value="0">
+                        <input type="range" id="slider-system-volume" class="booster-slider" min="0" max="100" value="50">
                     </div>
 
                     <div class="booster-controls">
-                        <button id="btn-booster-play" class="booster-ctrl-btn accent" title="Play">
+                        <button id="btn-volume-mute" class="booster-ctrl-btn" title="Mute Volume">
                             <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" d="M8 5v14l11-7z" />
+                                <path fill="currentColor" id="mute-btn-icon-path" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM3 9v6h4l5 5V4L7 9H3z" />
                             </svg>
                         </button>
-                        <button id="btn-booster-pause" class="booster-ctrl-btn" title="Pause">
-                            <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                            </svg>
-                        </button>
-                        <button id="btn-booster-stop" class="booster-ctrl-btn" title="Stop">
-                            <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" d="M6 6h12v12H6z" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="booster-input-group">
-                        <input type="text" id="booster-url-field" class="booster-url-input" placeholder="Paste Direct MP3 Audio Link here...">
-                        <button id="btn-booster-load" class="booster-load-btn">Load and Boost Audio</button>
                     </div>
 
                     <div class="booster-offline-section">
-                        <p id="booster-status-text" class="booster-status">Ready to load audio stream or offline synth tone</p>
-                        <button id="btn-booster-synth" class="booster-synth-btn">Play Calming Offline Sound</button>
+                        <p id="volume-status-text" class="booster-status">Alters device system volume. Compatible with Lectures & Bhajans tabs.</p>
                     </div>
                 </div>
             </div>
@@ -729,7 +706,7 @@
             <svg viewBox="0 0 24 24" class="nav-icon">
                 <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
             </svg>
-            <span class="nav-label">Booster</span>
+            <span class="nav-label">Volume</span>
         </button>
         <button class="nav-tab" data-tab="notes">
             <svg viewBox="0 0 24 24" class="nav-icon">

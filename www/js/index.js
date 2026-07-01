@@ -119,6 +119,7 @@ var BVApp = {
 
         this.initTheme();
         this.initOfflineDetection();
+        this.initVolumeControl();
         this.initNotes();
         this.renderBookmarks();
         this.bindEvents();
@@ -353,52 +354,18 @@ var BVApp = {
             });
         }
 
-        // --- Audio Booster Action Listeners ---
-        var boosterPlayBtn = document.getElementById('btn-booster-play');
-        var boosterPauseBtn = document.getElementById('btn-booster-pause');
-        var boosterStopBtn = document.getElementById('btn-booster-stop');
-        var boosterLoadBtn = document.getElementById('btn-booster-load');
-        var boosterUrlInput = document.getElementById('booster-url-field');
-        var boosterGainSlider = document.getElementById('slider-booster-gain');
-        var boosterProgressSlider = document.getElementById('slider-booster-progress');
-        var boosterSynthBtn = document.getElementById('btn-booster-synth');
+        // --- System Volume Action Listeners ---
+        var volumeSlider = document.getElementById('slider-system-volume');
+        var muteBtn = document.getElementById('btn-volume-mute');
 
-        if (boosterPlayBtn) {
-            boosterPlayBtn.addEventListener('click', function() {
-                self.playBoosterAudio();
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', function() {
+                self.setSystemVolume(this.value);
             });
         }
-        if (boosterPauseBtn) {
-            boosterPauseBtn.addEventListener('click', function() {
-                self.pauseBoosterAudio();
-            });
-        }
-        if (boosterStopBtn) {
-            boosterStopBtn.addEventListener('click', function() {
-                self.stopBoosterAudio();
-            });
-        }
-        if (boosterLoadBtn) {
-            boosterLoadBtn.addEventListener('click', function() {
-                var url = boosterUrlInput.value.trim();
-                if (url) {
-                    self.loadBoosterAudio(url);
-                }
-            });
-        }
-        if (boosterGainSlider) {
-            boosterGainSlider.addEventListener('input', function() {
-                self.setBoosterGain(this.value);
-            });
-        }
-        if (boosterProgressSlider) {
-            boosterProgressSlider.addEventListener('input', function() {
-                self.seekBoosterAudio(this.value);
-            });
-        }
-        if (boosterSynthBtn) {
-            boosterSynthBtn.addEventListener('click', function() {
-                self.playOfflineSynth();
+        if (muteBtn) {
+            muteBtn.addEventListener('click', function() {
+                self.toggleSystemMute();
             });
         }
     },
@@ -679,7 +646,7 @@ var BVApp = {
                 document.getElementById('notes-editor-subview').classList.remove('active');
                 this.renderNotesList('');
             } else if (tabId === 'booster') {
-                titleNode.innerText = 'Volume Booster';
+                titleNode.innerText = 'Volume Control';
                 refreshBtn.classList.add('hidden');
             } else if (tabId === 'lectures') titleNode.innerText = 'Lectures';
             else if (tabId === 'bhajans') titleNode.innerText = 'Bhajans';
@@ -1298,205 +1265,96 @@ var BVApp = {
         return month + ' ' + day + ', ' + year + ' ' + hours + ':' + minutes;
     },
 
-    initBoosterAudioContext: function() {
-        if (this.boosterContext) return;
-        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) {
-            console.error("Web Audio API not supported");
-            return;
-        }
-        this.boosterContext = new AudioContextClass();
-        this.boosterGainNode = this.boosterContext.createGain();
-        this.boosterGainNode.gain.value = 1.0;
-        this.boosterGainNode.connect(this.boosterContext.destination);
-    },
-
-    loadBoosterAudio: function(url) {
-        this.initBoosterAudioContext();
-        if (!this.boosterAudio) {
-            this.boosterAudio = new Audio();
-            this.boosterAudio.crossOrigin = "anonymous";
-            this.boosterSource = this.boosterContext.createMediaElementSource(this.boosterAudio);
-            this.boosterSource.connect(this.boosterGainNode);
+    initVolumeControl: function() {
+        var self = this;
+        var volumeSlider = document.getElementById('slider-system-volume');
+        var volumeValue = document.getElementById('system-volume-value');
+        var muteBtn = document.getElementById('btn-volume-mute');
+        
+        var VolumeControl = (window.cordova && window.cordova.plugins && window.cordova.plugins.VolumeControl) ? window.cordova.plugins.VolumeControl : null;
+        
+        if (VolumeControl) {
+            VolumeControl.getVolume(function(val) {
+                var volPct = Math.round(val * 100);
+                if (volumeSlider) volumeSlider.value = volPct;
+                if (volumeValue) volumeValue.innerText = volPct + '%';
+                self.updateVolumeUI(volPct);
+            });
             
-            var self = this;
-            this.boosterAudio.addEventListener('timeupdate', function() {
-                self.updateBoosterProgress();
+            VolumeControl.isMuted(function(muted) {
+                if (muted && muteBtn) {
+                    muteBtn.classList.add('active');
+                }
             });
-            this.boosterAudio.addEventListener('durationchange', function() {
-                self.updateBoosterProgress();
+        } else {
+            var cachedVol = localStorage.getItem('bv_simulated_volume') || '50';
+            if (volumeSlider) volumeSlider.value = cachedVol;
+            if (volumeValue) volumeValue.innerText = cachedVol + '%';
+            this.updateVolumeUI(parseInt(cachedVol, 10));
+        }
+    },
+    
+    setSystemVolume: function(val) {
+        var volPct = parseInt(val, 10);
+        var VolumeControl = (window.cordova && window.cordova.plugins && window.cordova.plugins.VolumeControl) ? window.cordova.plugins.VolumeControl : null;
+        
+        var volumeValue = document.getElementById('system-volume-value');
+        if (volumeValue) {
+            volumeValue.innerText = volPct + '%';
+        }
+        
+        this.updateVolumeUI(volPct);
+        
+        if (VolumeControl) {
+            VolumeControl.setVolume(volPct / 100);
+        } else {
+            localStorage.setItem('bv_simulated_volume', val);
+        }
+    },
+    
+    toggleSystemMute: function() {
+        var self = this;
+        var VolumeControl = (window.cordova && window.cordova.plugins && window.cordova.plugins.VolumeControl) ? window.cordova.plugins.VolumeControl : null;
+        var muteBtn = document.getElementById('btn-volume-mute');
+        
+        if (VolumeControl) {
+            VolumeControl.toggleMute();
+            VolumeControl.isMuted(function(muted) {
+                if (muteBtn) {
+                    if (muted) {
+                        muteBtn.classList.add('active');
+                        muteBtn.title = 'Unmute Volume';
+                    } else {
+                        muteBtn.classList.remove('active');
+                        muteBtn.title = 'Mute Volume';
+                    }
+                }
             });
-            this.boosterAudio.addEventListener('play', function() {
-                self.updateBoosterState(true);
-            });
-            this.boosterAudio.addEventListener('pause', function() {
-                self.updateBoosterState(false);
-            });
-            this.boosterAudio.addEventListener('ended', function() {
-                self.updateBoosterState(false);
-            });
-        }
-        
-        this.stopOfflineSynth();
-        this.boosterAudio.src = url;
-        this.boosterAudio.load();
-        
-        var indicator = document.getElementById('booster-status-text');
-        if (indicator) {
-            indicator.innerText = "Audio loaded. Playing...";
-        }
-        this.playBoosterAudio();
-    },
-
-    playOfflineSynth: function() {
-        this.initBoosterAudioContext();
-        this.stopBoosterAudio();
-        
-        if (this.synthOscillator) {
-            this.stopOfflineSynth();
-            return;
-        }
-        
-        if (this.boosterContext.state === 'suspended') {
-            this.boosterContext.resume();
-        }
-        
-        this.synthOscillator = this.boosterContext.createOscillator();
-        this.synthOscillator.type = 'triangle';
-        this.synthOscillator.frequency.value = 216;
-        
-        this.synthOscillator2 = this.boosterContext.createOscillator();
-        this.synthOscillator2.type = 'sine';
-        this.synthOscillator2.frequency.value = 324;
-        
-        this.synthOscillator.connect(this.boosterGainNode);
-        this.synthOscillator2.connect(this.boosterGainNode);
-        
-        this.synthOscillator.start(0);
-        this.synthOscillator2.start(0);
-        
-        this.updateBoosterState(true);
-        var indicator = document.getElementById('booster-status-text');
-        if (indicator) {
-            indicator.innerText = "Playing Calm Offline Synth Drone 🧘";
-        }
-        var synthBtn = document.getElementById('btn-booster-synth');
-        if (synthBtn) {
-            synthBtn.innerText = "Stop Calm Drone";
-            synthBtn.classList.add('active');
-        }
-    },
-    
-    stopOfflineSynth: function() {
-        if (this.synthOscillator) {
-            try {
-                this.synthOscillator.stop();
-                this.synthOscillator2.stop();
-            } catch(e) {}
-            this.synthOscillator = null;
-            this.synthOscillator2 = null;
-        }
-        var synthBtn = document.getElementById('btn-booster-synth');
-        if (synthBtn) {
-            synthBtn.innerText = "Play Calming Offline Sound";
-            synthBtn.classList.remove('active');
-        }
-        this.updateBoosterState(false);
-    },
-
-    playBoosterAudio: function() {
-        if (!this.boosterAudio) return;
-        this.initBoosterAudioContext();
-        if (this.boosterContext.state === 'suspended') {
-            this.boosterContext.resume();
-        }
-        this.boosterAudio.play();
-        var indicator = document.getElementById('booster-status-text');
-        if (indicator) {
-            indicator.innerText = "Playing Audio Stream";
-        }
-    },
-    
-    pauseBoosterAudio: function() {
-        if (this.boosterAudio) {
-            this.boosterAudio.pause();
-        }
-        this.stopOfflineSynth();
-        var indicator = document.getElementById('booster-status-text');
-        if (indicator) {
-            indicator.innerText = "Audio Paused";
-        }
-    },
-    
-    stopBoosterAudio: function() {
-        if (this.boosterAudio) {
-            this.boosterAudio.pause();
-            this.boosterAudio.currentTime = 0;
-        }
-        this.stopOfflineSynth();
-        var indicator = document.getElementById('booster-status-text');
-        if (indicator) {
-            indicator.innerText = "Audio Stopped";
-        }
-    },
-    
-    setBoosterGain: function(val) {
-        var gainValue = parseFloat(val) / 100;
-        this.initBoosterAudioContext();
-        if (this.boosterGainNode) {
-            this.boosterGainNode.gain.value = gainValue;
-        }
-        
-        var gainLabel = document.getElementById('booster-gain-value');
-        if (gainLabel) {
-            gainLabel.innerText = Math.round(gainValue * 100) + "%";
-        }
-        
-        var viz = document.getElementById('booster-visualizer-circle');
-        if (viz) {
-            viz.style.transform = 'scale(' + (1.0 + (gainValue - 1.0) * 0.4) + ')';
-            viz.style.boxShadow = '0 0 ' + (20 + (gainValue - 1.0) * 30) + 'px rgba(242, 101, 34, ' + (0.3 + (gainValue - 1.0) * 0.3) + ')';
-        }
-    },
-    
-    seekBoosterAudio: function(val) {
-        if (!this.boosterAudio || !this.boosterAudio.duration) return;
-        var newTime = (parseFloat(val) / 100) * this.boosterAudio.duration;
-        this.boosterAudio.currentTime = newTime;
-    },
-    
-    updateBoosterProgress: function() {
-        if (!this.boosterAudio) return;
-        var cur = this.boosterAudio.currentTime;
-        var dur = this.boosterAudio.duration || 0;
-        
-        var curMin = Math.floor(cur / 60);
-        var curSec = Math.floor(cur % 60);
-        var durMin = Math.floor(dur / 60);
-        var durSec = Math.floor(dur % 60);
-        
-        if (curSec < 10) curSec = '0' + curSec;
-        if (durSec < 10) durSec = '0' + durSec;
-        
-        var timeLabel = document.getElementById('booster-time-display');
-        if (timeLabel) {
-            timeLabel.innerText = curMin + ":" + curSec + " / " + durMin + ":" + durSec;
-        }
-        
-        var progressBar = document.getElementById('slider-booster-progress');
-        if (progressBar && dur > 0) {
-            progressBar.value = Math.round((cur / dur) * 100);
-        }
-    },
-    
-    updateBoosterState: function(isPlaying) {
-        var viz = document.getElementById('booster-visualizer-circle');
-        if (viz) {
-            if (isPlaying) {
-                viz.classList.add('playing');
-            } else {
-                viz.classList.remove('playing');
+        } else {
+            if (muteBtn) {
+                var isMuted = muteBtn.classList.contains('active');
+                if (isMuted) {
+                    muteBtn.classList.remove('active');
+                    muteBtn.title = 'Mute Volume';
+                    var volumeSlider = document.getElementById('slider-system-volume');
+                    var volVal = volumeSlider ? volumeSlider.value : 50;
+                    this.setSystemVolume(volVal);
+                } else {
+                    muteBtn.classList.add('active');
+                    muteBtn.title = 'Unmute Volume';
+                    var volumeValue = document.getElementById('system-volume-value');
+                    if (volumeValue) volumeValue.innerText = '0%';
+                    this.updateVolumeUI(0);
+                }
             }
+        }
+    },
+    
+    updateVolumeUI: function(volPct) {
+        var viz = document.getElementById('volume-visualizer-circle');
+        if (viz) {
+            viz.style.transform = 'scale(' + (1.0 + (volPct / 100) * 0.4) + ')';
+            viz.style.boxShadow = '0 0 ' + (20 + (volPct / 100) * 30) + 'px rgba(242, 101, 34, ' + (0.3 + (volPct / 100) * 0.3) + ')';
         }
     },
 
