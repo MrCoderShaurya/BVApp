@@ -1,63 +1,59 @@
-name: Build iOS Faster
+name: iOS Unsigned Build
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
   build:
-    # Use the latest available Mac runner for faster queue times
     runs-on: macos-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
-      - name: Install Cordova
-        run: npm install -g cordova
+      - name: Install Cordova CLI
+        run: npm install -g cordova@12
 
-      - name: Install Project Dependencies
+      - name: Install npm dependencies
         run: npm install
 
-      - name: Add iOS Platform
-        run: |
-          cordova platform rm ios || true
-          cordova platform add ios --verbose
+      - name: Add iOS platform
+        run: cordova platform add ios@7.0.0
 
-      - name: Build Unsigned App
-        run: |
-          cd platforms/ios
-          # Allow xcodebuild to use the default installed Xcode version
-          xcodebuild \
-            -workspace "Bhakti Vedanta App.xcworkspace" \
-            -scheme "Bhakti Vedanta App" \
-            -configuration Debug \
-            -sdk iphoneos \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM="" \
-            build | tee build.log
+      - name: Add Cordova plugins
+        run: cordova plugin add cordova-plugin-inappbrowser@6.0.0 || true
 
-      - name: Package .app into .ipa
+      - name: Build iOS App (Unsigned)
         run: |
-          mkdir -p Payload
-          # Automatically find the app file wherever it landed
-          APP_PATH=$(find platforms/ios/build -type d -name "*.app" | head -n 1)
+          cordova build ios --release --device \
+            --buildFlag="CODE_SIGNING_ALLOWED=NO" \
+            --buildFlag="CODE_SIGNING_REQUIRED=NO" \
+            --buildFlag="CODE_SIGN_IDENTITY="
+
+      - name: Package Unsigned IPA
+        run: |
+          APP_PATH=$(find platforms/ios/build -name "*.app" | head -1)
           if [ -z "$APP_PATH" ]; then
-            APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -type d -name "*.app" | head -n 1)
+            APP_PATH=$(find platforms/ios -name "*.app" | head -1)
           fi
-          
-          echo "Packaging app from: $APP_PATH"
+          echo "Found compiled app at: $APP_PATH"
+          mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -r app.ipa Payload
+          zip -r BVApp-unsigned.ipa Payload/
+          echo "IPA created successfully"
 
-      - name: Upload IPA
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Bhakti-Vedanta-iOS-App
-          path: app.ipa
+          name: ios-unsigned-ipa
+          path: BVApp-unsigned.ipa
+          if-no-files-found: error
