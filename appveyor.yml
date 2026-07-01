@@ -1,0 +1,57 @@
+image: macos-monterey
+
+environment:
+  NODE_VERSION: "16"
+
+install:
+  # Switch node version
+  - ps: nvm use $env:NODE_VERSION || nvm install $env:NODE_VERSION
+  - node --version
+  - npm install -g cordova@11.1.0
+  - npm install
+  - cordova platform add ios@6.3.0
+  - cordova prepare ios
+
+build_script:
+  # Switch active Xcode to 13.4.1 (which supports armv7 32-bit architecture)
+  - sudo xcode-select -s /Applications/Xcode_13.4.1.app/Contents/Developer
+  - xcodebuild -version
+
+  # Build CordovaLib dependency first
+  - xcodebuild \
+      -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" \
+      -scheme "CordovaLib" \
+      -configuration Release \
+      -sdk iphoneos \
+      -derivedDataPath "$PWD/DerivedData" \
+      CODE_SIGN_IDENTITY="" \
+      CODE_SIGNING_REQUIRED=NO \
+      CODE_SIGNING_ALLOWED=NO \
+      ARCHS="armv7 arm64" \
+      VALID_ARCHS="armv7 arm64"
+
+  # Build the main app target for armv7 and arm64, targeting iOS 9.0
+  - xcodebuild \
+      -workspace "platforms/ios/Bhakti Vedanta App.xcworkspace" \
+      -scheme "Bhakti Vedanta App" \
+      -configuration Release \
+      -sdk iphoneos \
+      -derivedDataPath "$PWD/DerivedData" \
+      CODE_SIGN_IDENTITY="" \
+      CODE_SIGNING_REQUIRED=NO \
+      CODE_SIGNING_ALLOWED=NO \
+      AD_HOC_CODE_SIGNING_ALLOWED=NO \
+      IPHONEOS_DEPLOYMENT_TARGET=9.0 \
+      ENABLE_BITCODE=NO \
+      ENABLE_ON_DEMAND_RESOURCES=NO \
+      ARCHS="armv7 arm64" \
+      VALID_ARCHS="armv7 arm64"
+
+after_build:
+  - mkdir -p Payload
+  - cp -r "DerivedData/Build/Products/Release-iphoneos/Bhakti Vedanta App.app" Payload/
+  - zip -r BVApp-unsigned-32bit.ipa Payload/
+
+artifacts:
+  - path: BVApp-unsigned-32bit.ipa
+    name: BVApp-unsigned-32bit
