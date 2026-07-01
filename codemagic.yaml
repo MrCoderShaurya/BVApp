@@ -42,7 +42,8 @@ workflows:
 
       - name: Cordova Build iOS (Unsigned)
         script: |
-          cordova build ios --release --device \
+          cordova build ios --release --device -- \
+            --noSign \
             --buildFlag="CODE_SIGNING_ALLOWED=NO" \
             --buildFlag="CODE_SIGNING_REQUIRED=NO" \
             --buildFlag="CODE_SIGN_IDENTITY="
