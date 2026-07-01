@@ -9,6 +9,9 @@ install:
   - npm install
   - cordova platform add ios@6.3.0
   - cordova prepare ios
+  # Patch the storyboard to use classic calibratedWhite color space (iOS 9 compatible)
+  - sed -i '' 's/colorSpace="custom" customColorSpace="calibratedWhite"/colorSpace="calibratedWhite"/g' "platforms/ios/Bhakti Vedanta App/CDVLaunchScreen.storyboard"
+
 
 build_script:
   # Automatically find and select any Xcode 13.x app
