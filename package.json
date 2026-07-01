@@ -14,7 +14,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "cordova-plugin-inappbrowser": "3.2.0",
-    "cordova-plugin-volume-control": "^1.0.1"
+    "cordova-plugin-volume-control": "git+https://github.com/jlorente/cordova-plugin-volume-control.git"
   },
   "devDependencies": {},
   "cordova": {
