@@ -46,17 +46,6 @@
                         d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                 </svg>
             </button>
-            <button id="btn-zoom-out" class="header-btn hidden" title="Zoom Out">
-                <svg viewBox="0 0 24 24" width="22" height="22">
-                    <path fill="currentColor" d="M19 13H5v-2h14v2z" />
-                </svg>
-            </button>
-            <span id="zoom-level-indicator" class="zoom-indicator hidden">100%</span>
-            <button id="btn-zoom-in" class="header-btn hidden" title="Zoom In">
-                <svg viewBox="0 0 24 24" width="22" height="22">
-                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                </svg>
-            </button>
             <button id="btn-theme" class="header-btn" title="Toggle Dark/Light Mode">
                 <svg id="theme-moon" viewBox="0 0 24 24" width="22" height="22">
                     <path fill="currentColor"
@@ -137,17 +126,6 @@
                     </div>
                 </button>
 
-                <button class="dash-card" data-target="meetings">
-                    <div class="dash-icon meetings-color">
-                        <svg viewBox="0 0 24 24" width="32" height="32">
-                            <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
-                        </svg>
-                    </div>
-                    <div class="dash-info">
-                        <h3>Meetings</h3>
-                        <p>Join Zoom & Google Meet calls</p>
-                    </div>
-                </button>
 
                 <button class="dash-card" data-target="notes">
                     <div class="dash-icon notes-color">
@@ -434,73 +412,63 @@
                     </table>
                 </div>
             </div>
-        </section>
-
-
-
-        <!-- Section 6: Meetings (Zoom & Google Meet) -->
-        <section id="view-meetings" class="content-view">
-            <!-- Subview 6A: Launcher Dashboard -->
-            <div id="meetings-launcher" class="meetings-subpanel active">
-                <div class="meetings-card-container">
-                    <!-- Zoom Launcher -->
-                    <div class="launcher-block">
-                        <div class="launcher-head zoom-theme">
-                            <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+        <!-- Section 6: Audio Volume Booster -->
+        <section id="view-booster" class="content-view">
+            <div class="booster-container">
+                <div class="booster-card">
+                    <h2 class="booster-title">Audio Volume Booster</h2>
+                    <p class="booster-subtitle">Boost audio volume up to 300% using Web Audio API</p>
+                    
+                    <div class="booster-viz-wrapper">
+                        <div id="booster-visualizer-circle" class="booster-viz">
+                            <svg viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                             </svg>
-                            <h3>Zoom Meeting Launcher</h3>
-                        </div>
-                        <div class="launcher-body">
-                            <p class="launcher-note">Enter Zoom Link or Meeting ID to load:</p>
-                            <input type="text" id="zoom-url-field" class="meetings-input" placeholder="https://zoom.us/j/... or Meeting ID">
-                            <div class="launcher-buttons">
-                                <button id="btn-zoom-iframe" class="action-btn zoom-bg">Load in App (Webview)</button>
-                                <button id="btn-zoom-native" class="action-btn outline-bg">Launch Zoom App</button>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Google Meet Launcher -->
-                    <div class="launcher-block">
-                        <div class="launcher-head meet-theme">
+                    <div class="booster-slider-group">
+                        <div class="booster-slider-label">
+                            <span>Booster Level (Gain)</span>
+                            <span id="booster-gain-value" class="val">100%</span>
+                        </div>
+                        <input type="range" id="slider-booster-gain" class="booster-slider" min="100" max="300" value="100">
+                    </div>
+
+                    <div class="booster-slider-group">
+                        <div class="booster-slider-label">
+                            <span id="booster-time-display">0:00 / 0:00</span>
+                        </div>
+                        <input type="range" id="slider-booster-progress" class="booster-slider" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="booster-controls">
+                        <button id="btn-booster-play" class="booster-ctrl-btn accent" title="Play">
                             <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 12H9v-2h6v2zm3-4H6V8h12v4z" />
+                                <path fill="currentColor" d="M8 5v14l11-7z" />
                             </svg>
-                            <h3>Google Meet Launcher</h3>
-                        </div>
-                        <div class="launcher-body">
-                            <p class="launcher-note">Enter Google Meet link or code to join:</p>
-                            <input type="text" id="meet-url-field" class="meetings-input" placeholder="https://meet.google.com/abc-defg-hij">
-                            <div class="launcher-buttons">
-                                <button id="btn-meet-iframe" class="action-btn meet-bg">Load in App (Webview)</button>
-                                <button id="btn-meet-native" class="action-btn outline-bg">Launch Safari / App</button>
-                            </div>
-                        </div>
+                        </button>
+                        <button id="btn-booster-pause" class="booster-ctrl-btn" title="Pause">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                            </svg>
+                        </button>
+                        <button id="btn-booster-stop" class="booster-ctrl-btn" title="Stop">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M6 6h12v12H6z" />
+                            </svg>
+                        </button>
                     </div>
-                </div>
-            </div>
 
-            <!-- Subview 6B: Embedded Webview Portal -->
-            <div id="meetings-portal" class="meetings-subpanel">
-                <div class="online-state">
-                    <div class="spinner-container" id="spinner-meetings">
-                        <div class="loading-spinner"></div>
-                        <p>Connecting to meeting...</p>
+                    <div class="booster-input-group">
+                        <input type="text" id="booster-url-field" class="booster-url-input" placeholder="Paste Direct MP3 Audio Link here...">
+                        <button id="btn-booster-load" class="booster-load-btn">Load and Boost Audio</button>
                     </div>
-                    <div class="iframe-scroll-wrapper">
-                        <iframe id="iframe-meetings" class="content-iframe" frameborder="0"></iframe>
+
+                    <div class="booster-offline-section">
+                        <p id="booster-status-text" class="booster-status">Ready to load audio stream or offline synth tone</p>
+                        <button id="btn-booster-synth" class="booster-synth-btn">Play Calming Offline Sound</button>
                     </div>
-                </div>
-                <div class="helper-content offline-state hidden">
-                    <div class="helper-icon offline-color">
-                        <svg viewBox="0 0 24 24" width="64" height="64">
-                            <path fill="currentColor"
-                                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
-                        </svg>
-                    </div>
-                    <h2>No Internet Connection</h2>
-                    <p class="helper-desc">An active internet connection is required to load video conferences.</p>
                 </div>
             </div>
         </section>
@@ -569,28 +537,12 @@
 
                     <!-- Unified Ribbon Tool Selection Row -->
                     <div class="editor-tools-ribbon">
-                        <button type="button" id="btn-tool-text" class="tool-select-btn active"
-                            title="Text realization mode">
-                            <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor"
-                                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                            </svg>
-                            <span>Text</span>
-                        </button>
-                        <button type="button" id="btn-tool-pen" class="tool-select-btn" title="Pen drawing mode">
+                        <button type="button" id="btn-tool-pen" class="tool-select-btn active" title="Pen drawing mode">
                             <svg viewBox="0 0 24 24" width="18" height="18">
                                 <path fill="currentColor"
                                     d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                             </svg>
                             <span>Pen</span>
-                        </button>
-                        <button type="button" id="btn-tool-highlighter" class="tool-select-btn"
-                            title="Highlighter marker mode">
-                            <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor"
-                                    d="M15.24 3.12L20.88 8.76c.78.78.78 2.05 0 2.83l-8.48 8.48c-.78.78-2.05.78-2.83 0l-5.64-5.64c-.78-.78-.78-2.05 0-2.83l8.48-8.48c.78-.78 2.05-.78 2.83 0M6.54 13.12l5.64 5.64-2.83 2.83H4v-5.64l2.54-2.83z" />
-                            </svg>
-                            <span>Highlighter</span>
                         </button>
                         <button type="button" id="btn-tool-eraser" class="tool-select-btn" title="Eraser tool mode">
                             <svg viewBox="0 0 24 24" width="18" height="18">
@@ -611,8 +563,8 @@
 
                     <!-- Dynamic Formatting Tray -->
                     <div class="editor-format-tray">
-                        <!-- Text Formatting subtray -->
-                        <div class="format-subtray" id="format-tray-text">
+                        <!-- Text Formatting subtray (Hidden) -->
+                        <div class="format-subtray hidden" id="format-tray-text">
                             <div class="canvas-toolbar-row">
                                 <!-- Bold / Italic Toggles -->
                                 <div class="toolbar-group">
@@ -717,12 +669,12 @@
                         </div>
                     </div>
 
-                    <!-- Layered Workspace (Bottom: Text Input, Top: Drawing Canvas Overlay) -->
+                    <!-- Layered Workspace (Bottom: Text Input (Hidden), Top: Drawing Canvas Overlay) -->
                     <div class="editor-workspace-container">
                         <textarea id="note-content-input" placeholder="Start writing down your realization..."
-                            class="editor-content-field"></textarea>
+                            class="editor-content-field" style="display: none;"></textarea>
                         <div class="canvas-container">
-                            <canvas id="note-canvas" width="600" height="400"></canvas>
+                            <canvas id="note-canvas" width="1200" height="960"></canvas>
                         </div>
                     </div>
                 </div>
@@ -766,11 +718,11 @@
             </svg>
             <span class="nav-label">Calendar</span>
         </button>
-        <button class="nav-tab" data-tab="meetings">
+        <button class="nav-tab" data-tab="booster">
             <svg viewBox="0 0 24 24" class="nav-icon">
-                <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+                <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
             </svg>
-            <span class="nav-label">Meetings</span>
+            <span class="nav-label">Booster</span>
         </button>
         <button class="nav-tab" data-tab="notes">
             <svg viewBox="0 0 24 24" class="nav-icon">

@@ -17,19 +17,18 @@ var appState = {
     saveTimeout: null,
     isDarkMode: false,
     isOnline: true,
-    zoomScale: 1.0,
     
     // Sketchpad Drawing State
     isDrawing: false,
-    currentTool: 'pen', // 'pen', 'highlighter', 'eraser'
+    currentTool: 'pen', // 'pen', 'eraser'
     currentSize: 3,
     currentEraserSize: 12,
     currentColor: '#2d3748',
     lastX: 0,
     lastY: 0,
     
-    // Editor Active Tool State ('text', 'pen', 'highlighter', 'eraser')
-    activeTool: 'text'
+    // Editor Active Tool State ('pen', 'eraser')
+    activeTool: 'pen'
 };
 
 // Target Embedded Iframe URLs
@@ -168,13 +167,6 @@ var BVApp = {
 
         // Header Action Buttons
         document.getElementById('btn-home').addEventListener('click', function() {
-            if (appState.activeTab === 'meetings') {
-                var portal = document.getElementById('meetings-portal');
-                if (portal && !portal.classList.contains('hidden')) {
-                    self.resetMeetingsPortal();
-                    return;
-                }
-            }
             self.switchTab('dashboard');
         });
 
@@ -242,14 +234,8 @@ var BVApp = {
         });
 
         // Unified Ribbon Tool Selection row click handlers
-        document.getElementById('btn-tool-text').addEventListener('click', function() {
-            self.setActiveTool('text');
-        });
         document.getElementById('btn-tool-pen').addEventListener('click', function() {
             self.setActiveTool('pen');
-        });
-        document.getElementById('btn-tool-highlighter').addEventListener('click', function() {
-            self.setActiveTool('highlighter');
         });
         document.getElementById('btn-tool-eraser').addEventListener('click', function() {
             self.setActiveTool('eraser');
@@ -260,56 +246,6 @@ var BVApp = {
                 self.clearCanvas();
             }
         });
-
-        // Writing Formatting Event Listeners (Home Ribbon Tab)
-        document.getElementById('btn-text-bold').addEventListener('click', function() {
-            var note = self.findNoteById(appState.activeNoteId);
-            if (note) {
-                note.bold = !note.bold;
-                if (note.bold) this.classList.add('active');
-                else this.classList.remove('active');
-                self.applyTextFormatting(note);
-                self.triggerAutoSave();
-            }
-        });
-
-        document.getElementById('btn-text-italic').addEventListener('click', function() {
-            var note = self.findNoteById(appState.activeNoteId);
-            if (note) {
-                note.italic = !note.italic;
-                if (note.italic) this.classList.add('active');
-                else this.classList.remove('active');
-                self.applyTextFormatting(note);
-                self.triggerAutoSave();
-            }
-        });
-
-        document.getElementById('select-text-size').addEventListener('change', function() {
-            var note = self.findNoteById(appState.activeNoteId);
-            if (note) {
-                note.fontSize = this.value;
-                self.applyTextFormatting(note);
-                self.triggerAutoSave();
-            }
-        });
-
-        var textSwatches = document.querySelectorAll('.text-color-swatch');
-        for (var i = 0; i < textSwatches.length; i++) {
-            textSwatches[i].addEventListener('click', function() {
-                for (var j = 0; j < textSwatches.length; j++) {
-                    textSwatches[j].classList.remove('active');
-                }
-                this.classList.add('active');
-
-                var color = this.getAttribute('data-color');
-                var note = self.findNoteById(appState.activeNoteId);
-                if (note) {
-                    note.textColor = color;
-                    self.applyTextFormatting(note);
-                    self.triggerAutoSave();
-                }
-            });
-        }
 
         // Notes Editor inputs (for auto-saving)
         var titleField = document.getElementById('note-title-input');
@@ -354,93 +290,79 @@ var BVApp = {
             });
         }
 
-        // --- Meetings Tab Action Listeners ---
-        document.getElementById('btn-zoom-iframe').addEventListener('click', function() {
-            var url = document.getElementById('zoom-url-field').value.trim();
-            if (!url) return;
-            if (/^\d+$/.test(url.replace(/\s+/g, ''))) {
-                url = 'https://zoom.us/wc/' + url.replace(/\s+/g, '') + '/join';
-            }
-            self.loadMeetingsPortal(url);
-        });
+        // --- Audio Booster Action Listeners ---
+        var boosterPlayBtn = document.getElementById('btn-booster-play');
+        var boosterPauseBtn = document.getElementById('btn-booster-pause');
+        var boosterStopBtn = document.getElementById('btn-booster-stop');
+        var boosterLoadBtn = document.getElementById('btn-booster-load');
+        var boosterUrlInput = document.getElementById('booster-url-field');
+        var boosterGainSlider = document.getElementById('slider-booster-gain');
+        var boosterProgressSlider = document.getElementById('slider-booster-progress');
+        var boosterSynthBtn = document.getElementById('btn-booster-synth');
 
-        document.getElementById('btn-zoom-native').addEventListener('click', function() {
-            var url = document.getElementById('zoom-url-field').value.trim();
-            if (!url) return;
-            if (/^\d+$/.test(url.replace(/\s+/g, ''))) {
-                window.open('zoomus://zoom.us/join?confno=' + url.replace(/\s+/g, ''), '_system');
-            } else {
-                window.open(url, '_system');
-            }
-        });
-
-        document.getElementById('btn-meet-iframe').addEventListener('click', function() {
-            var url = document.getElementById('meet-url-field').value.trim();
-            if (!url) return;
-            self.loadMeetingsPortal(url);
-        });
-
-        document.getElementById('btn-meet-native').addEventListener('click', function() {
-            var url = document.getElementById('meet-url-field').value.trim();
-            if (!url) return;
-            window.open(url, '_system');
-        });
-
-        document.getElementById('btn-zoom-in').addEventListener('click', function() {
-            self.adjustMeetingsZoom(0.1);
-        });
-
-        document.getElementById('btn-zoom-out').addEventListener('click', function() {
-            self.adjustMeetingsZoom(-0.1);
-        });
-
-        var meetingsIframe = document.getElementById('iframe-meetings');
-        if (meetingsIframe) {
-            meetingsIframe.onload = function() {
-                var spinner = document.getElementById('spinner-meetings');
-                if (spinner) {
-                    spinner.style.opacity = '0';
-                    setTimeout(function() {
-                        spinner.classList.add('hidden');
-                    }, 300);
+        if (boosterPlayBtn) {
+            boosterPlayBtn.addEventListener('click', function() {
+                self.playBoosterAudio();
+            });
+        }
+        if (boosterPauseBtn) {
+            boosterPauseBtn.addEventListener('click', function() {
+                self.pauseBoosterAudio();
+            });
+        }
+        if (boosterStopBtn) {
+            boosterStopBtn.addEventListener('click', function() {
+                self.stopBoosterAudio();
+            });
+        }
+        if (boosterLoadBtn) {
+            boosterLoadBtn.addEventListener('click', function() {
+                var url = boosterUrlInput.value.trim();
+                if (url) {
+                    self.loadBoosterAudio(url);
                 }
-            };
+            });
+        }
+        if (boosterGainSlider) {
+            boosterGainSlider.addEventListener('input', function() {
+                self.setBoosterGain(this.value);
+            });
+        }
+        if (boosterProgressSlider) {
+            boosterProgressSlider.addEventListener('input', function() {
+                self.seekBoosterAudio(this.value);
+            });
+        }
+        if (boosterSynthBtn) {
+            boosterSynthBtn.addEventListener('click', function() {
+                self.playOfflineSynth();
+            });
         }
     },
 
     setActiveTool: function(toolName) {
         appState.activeTool = toolName;
         
-        var btnText = document.getElementById('btn-tool-text');
         var btnPen = document.getElementById('btn-tool-pen');
-        var btnHighlighter = document.getElementById('btn-tool-highlighter');
         var btnEraser = document.getElementById('btn-tool-eraser');
 
-        btnText.classList.remove('active');
-        btnPen.classList.remove('active');
-        btnHighlighter.classList.remove('active');
-        btnEraser.classList.remove('active');
+        if (btnPen) btnPen.classList.remove('active');
+        if (btnEraser) btnEraser.classList.remove('active');
 
-        if (toolName === 'text') btnText.classList.add('active');
-        else if (toolName === 'pen') btnPen.classList.add('active');
-        else if (toolName === 'highlighter') btnHighlighter.classList.add('active');
-        else if (toolName === 'eraser') btnEraser.classList.add('active');
+        if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
+        else if (toolName === 'eraser' && btnEraser) btnEraser.classList.add('active');
 
         // Toggle Formatting Trays
-        var trayText = document.getElementById('format-tray-text');
         var trayDraw = document.getElementById('format-tray-draw');
         var trayEraser = document.getElementById('format-tray-eraser');
 
-        trayText.classList.add('hidden');
-        trayDraw.classList.add('hidden');
-        trayEraser.classList.add('hidden');
+        if (trayDraw) trayDraw.classList.add('hidden');
+        if (trayEraser) trayEraser.classList.add('hidden');
 
-        if (toolName === 'text') {
-            trayText.classList.remove('hidden');
-        } else if (toolName === 'pen' || toolName === 'highlighter') {
-            trayDraw.classList.remove('hidden');
+        if (toolName === 'pen') {
+            if (trayDraw) trayDraw.classList.remove('hidden');
         } else if (toolName === 'eraser') {
-            trayEraser.classList.remove('hidden');
+            if (trayEraser) trayEraser.classList.remove('hidden');
         }
 
         // Toggle view-mode class on editor subview to control pointer events
@@ -454,26 +376,7 @@ var BVApp = {
         }
 
         // Update drawing canvas tool state
-        if (toolName !== 'text') {
-            appState.currentTool = toolName;
-        }
-    },
-
-    applyTextFormatting: function(note) {
-        var textarea = this.noteContentInput;
-        if (!textarea) return;
-        
-        if (note) {
-            textarea.style.fontWeight = note.bold ? 'bold' : 'normal';
-            textarea.style.fontStyle = note.italic ? 'italic' : 'normal';
-            textarea.style.fontSize = note.fontSize || '15px';
-            textarea.style.color = note.textColor || '#2d3748';
-        } else {
-            textarea.style.fontWeight = 'normal';
-            textarea.style.fontStyle = 'normal';
-            textarea.style.fontSize = '15px';
-            textarea.style.color = '#2d3748';
-        }
+        appState.currentTool = toolName;
     },
 
     // --- Sketchpad Drawing Handlers ---
@@ -705,29 +608,13 @@ var BVApp = {
                 document.getElementById('notes-list-subview').classList.add('active');
                 document.getElementById('notes-editor-subview').classList.remove('active');
                 this.renderNotesList('');
+            } else if (tabId === 'booster') {
+                titleNode.innerText = 'Volume Booster';
+                refreshBtn.classList.add('hidden');
             } else if (tabId === 'lectures') titleNode.innerText = 'Lectures';
             else if (tabId === 'bhajans') titleNode.innerText = 'Bhajans';
             else if (tabId === 'reading') titleNode.innerText = 'Reading';
             else if (tabId === 'calendar') titleNode.innerText = 'Calendar';
-            else if (tabId === 'meetings') titleNode.innerText = 'Meetings';
-        }
-
-        // Toggle visibility of zoom scale controls in the header
-        var zoomInBtn = document.getElementById('btn-zoom-in');
-        var zoomOutBtn = document.getElementById('btn-zoom-out');
-        var zoomIndicator = document.getElementById('zoom-level-indicator');
-
-        if (tabId === 'meetings') {
-            if (zoomInBtn) zoomInBtn.classList.remove('hidden');
-            if (zoomOutBtn) zoomOutBtn.classList.remove('hidden');
-            if (zoomIndicator) {
-                zoomIndicator.classList.remove('hidden');
-                zoomIndicator.innerText = Math.round(appState.zoomScale * 100) + '%';
-            }
-        } else {
-            if (zoomInBtn) zoomInBtn.classList.add('hidden');
-            if (zoomOutBtn) zoomOutBtn.classList.add('hidden');
-            if (zoomIndicator) zoomIndicator.classList.add('hidden');
         }
 
         // 4. Trigger iframe load for remote tabs (with connectivity support)
@@ -801,16 +688,6 @@ var BVApp = {
                 }
                 
                 // Force reload src
-                iframe.src = iframe.src;
-            }
-        } else if (tabId === 'meetings') {
-            var iframe = document.getElementById('iframe-meetings');
-            if (iframe) {
-                var spinner = document.getElementById('spinner-meetings');
-                if (spinner) {
-                    spinner.style.opacity = '1';
-                    spinner.classList.remove('hidden');
-                }
                 iframe.src = iframe.src;
             }
         }
@@ -1351,66 +1228,205 @@ var BVApp = {
         return month + ' ' + day + ', ' + year + ' ' + hours + ':' + minutes;
     },
 
-    loadMeetingsPortal: function(url) {
-        if (!/^https?:\/\//i.test(url)) {
-            url = 'https://' + url;
+    initBoosterAudioContext: function() {
+        if (this.boosterContext) return;
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+            console.error("Web Audio API not supported");
+            return;
         }
-        var portal = document.getElementById('meetings-portal');
-        var launcher = document.getElementById('meetings-launcher');
-        var iframe = document.getElementById('iframe-meetings');
-        var spinner = document.getElementById('spinner-meetings');
+        this.boosterContext = new AudioContextClass();
+        this.boosterGainNode = this.boosterContext.createGain();
+        this.boosterGainNode.gain.value = 1.0;
+        this.boosterGainNode.connect(this.boosterContext.destination);
+    },
 
-        if (portal && launcher && iframe) {
-            launcher.classList.remove('active');
-            launcher.style.display = 'none';
-            portal.classList.add('active');
-            portal.style.display = 'block';
+    loadBoosterAudio: function(url) {
+        this.initBoosterAudioContext();
+        if (!this.boosterAudio) {
+            this.boosterAudio = new Audio();
+            this.boosterAudio.crossOrigin = "anonymous";
+            this.boosterSource = this.boosterContext.createMediaElementSource(this.boosterAudio);
+            this.boosterSource.connect(this.boosterGainNode);
+            
+            var self = this;
+            this.boosterAudio.addEventListener('timeupdate', function() {
+                self.updateBoosterProgress();
+            });
+            this.boosterAudio.addEventListener('durationchange', function() {
+                self.updateBoosterProgress();
+            });
+            this.boosterAudio.addEventListener('play', function() {
+                self.updateBoosterState(true);
+            });
+            this.boosterAudio.addEventListener('pause', function() {
+                self.updateBoosterState(false);
+            });
+            this.boosterAudio.addEventListener('ended', function() {
+                self.updateBoosterState(false);
+            });
+        }
+        
+        this.stopOfflineSynth();
+        this.boosterAudio.src = url;
+        this.boosterAudio.load();
+        
+        var indicator = document.getElementById('booster-status-text');
+        if (indicator) {
+            indicator.innerText = "Audio loaded. Playing...";
+        }
+        this.playBoosterAudio();
+    },
 
-            if (spinner) {
-                spinner.style.opacity = '1';
-                spinner.classList.remove('hidden');
+    playOfflineSynth: function() {
+        this.initBoosterAudioContext();
+        this.stopBoosterAudio();
+        
+        if (this.synthOscillator) {
+            this.stopOfflineSynth();
+            return;
+        }
+        
+        if (this.boosterContext.state === 'suspended') {
+            this.boosterContext.resume();
+        }
+        
+        this.synthOscillator = this.boosterContext.createOscillator();
+        this.synthOscillator.type = 'triangle';
+        this.synthOscillator.frequency.value = 216;
+        
+        this.synthOscillator2 = this.boosterContext.createOscillator();
+        this.synthOscillator2.type = 'sine';
+        this.synthOscillator2.frequency.value = 324;
+        
+        this.synthOscillator.connect(this.boosterGainNode);
+        this.synthOscillator2.connect(this.boosterGainNode);
+        
+        this.synthOscillator.start(0);
+        this.synthOscillator2.start(0);
+        
+        this.updateBoosterState(true);
+        var indicator = document.getElementById('booster-status-text');
+        if (indicator) {
+            indicator.innerText = "Playing Calm Offline Synth Drone 🧘";
+        }
+        var synthBtn = document.getElementById('btn-booster-synth');
+        if (synthBtn) {
+            synthBtn.innerText = "Stop Calm Drone";
+            synthBtn.classList.add('active');
+        }
+    },
+    
+    stopOfflineSynth: function() {
+        if (this.synthOscillator) {
+            try {
+                this.synthOscillator.stop();
+                this.synthOscillator2.stop();
+            } catch(e) {}
+            this.synthOscillator = null;
+            this.synthOscillator2 = null;
+        }
+        var synthBtn = document.getElementById('btn-booster-synth');
+        if (synthBtn) {
+            synthBtn.innerText = "Play Calming Offline Sound";
+            synthBtn.classList.remove('active');
+        }
+        this.updateBoosterState(false);
+    },
+
+    playBoosterAudio: function() {
+        if (!this.boosterAudio) return;
+        this.initBoosterAudioContext();
+        if (this.boosterContext.state === 'suspended') {
+            this.boosterContext.resume();
+        }
+        this.boosterAudio.play();
+        var indicator = document.getElementById('booster-status-text');
+        if (indicator) {
+            indicator.innerText = "Playing Audio Stream";
+        }
+    },
+    
+    pauseBoosterAudio: function() {
+        if (this.boosterAudio) {
+            this.boosterAudio.pause();
+        }
+        this.stopOfflineSynth();
+        var indicator = document.getElementById('booster-status-text');
+        if (indicator) {
+            indicator.innerText = "Audio Paused";
+        }
+    },
+    
+    stopBoosterAudio: function() {
+        if (this.boosterAudio) {
+            this.boosterAudio.pause();
+            this.boosterAudio.currentTime = 0;
+        }
+        this.stopOfflineSynth();
+        var indicator = document.getElementById('booster-status-text');
+        if (indicator) {
+            indicator.innerText = "Audio Stopped";
+        }
+    },
+    
+    setBoosterGain: function(val) {
+        var gainValue = parseFloat(val) / 100;
+        this.initBoosterAudioContext();
+        if (this.boosterGainNode) {
+            this.boosterGainNode.gain.value = gainValue;
+        }
+        
+        var gainLabel = document.getElementById('booster-gain-value');
+        if (gainLabel) {
+            gainLabel.innerText = Math.round(gainValue * 100) + "%";
+        }
+        
+        var viz = document.getElementById('booster-visualizer-circle');
+        if (viz) {
+            viz.style.transform = 'scale(' + (1.0 + (gainValue - 1.0) * 0.4) + ')';
+            viz.style.boxShadow = '0 0 ' + (20 + (gainValue - 1.0) * 30) + 'px rgba(242, 101, 34, ' + (0.3 + (gainValue - 1.0) * 0.3) + ')';
+        }
+    },
+    
+    seekBoosterAudio: function(val) {
+        if (!this.boosterAudio || !this.boosterAudio.duration) return;
+        var newTime = (parseFloat(val) / 100) * this.boosterAudio.duration;
+        this.boosterAudio.currentTime = newTime;
+    },
+    
+    updateBoosterProgress: function() {
+        if (!this.boosterAudio) return;
+        var cur = this.boosterAudio.currentTime;
+        var dur = this.boosterAudio.duration || 0;
+        
+        var curMin = Math.floor(cur / 60);
+        var curSec = Math.floor(cur % 60);
+        var durMin = Math.floor(dur / 60);
+        var durSec = Math.floor(dur % 60);
+        
+        if (curSec < 10) curSec = '0' + curSec;
+        if (durSec < 10) durSec = '0' + durSec;
+        
+        var timeLabel = document.getElementById('booster-time-display');
+        if (timeLabel) {
+            timeLabel.innerText = curMin + ":" + curSec + " / " + durMin + ":" + durSec;
+        }
+        
+        var progressBar = document.getElementById('slider-booster-progress');
+        if (progressBar && dur > 0) {
+            progressBar.value = Math.round((cur / dur) * 100);
+        }
+    },
+    
+    updateBoosterState: function(isPlaying) {
+        var viz = document.getElementById('booster-visualizer-circle');
+        if (viz) {
+            if (isPlaying) {
+                viz.classList.add('playing');
+            } else {
+                viz.classList.remove('playing');
             }
-
-            iframe.src = url;
-            this.applyMeetingsZoom();
-            this.switchTab('meetings');
-        }
-    },
-
-    resetMeetingsPortal: function() {
-        var portal = document.getElementById('meetings-portal');
-        var launcher = document.getElementById('meetings-launcher');
-        var iframe = document.getElementById('iframe-meetings');
-
-        if (portal && launcher && iframe) {
-            iframe.src = 'about:blank';
-            portal.classList.remove('active');
-            portal.style.display = 'none';
-            launcher.classList.add('active');
-            launcher.style.display = 'block';
-        }
-    },
-
-    adjustMeetingsZoom: function(delta) {
-        var newZoom = appState.zoomScale + delta;
-        if (newZoom >= 0.5 && newZoom <= 3.0) {
-            appState.zoomScale = parseFloat(newZoom.toFixed(1));
-            this.applyMeetingsZoom();
-        }
-    },
-
-    applyMeetingsZoom: function() {
-        var scale = appState.zoomScale;
-        var iframe = document.getElementById('iframe-meetings');
-        if (iframe) {
-            iframe.style.transform = 'scale(' + scale + ')';
-            iframe.style.transformOrigin = '0 0';
-            iframe.style.width = (100 / scale) + '%';
-            iframe.style.height = (100 / scale) + '%';
-        }
-        var zoomIndicator = document.getElementById('zoom-level-indicator');
-        if (zoomIndicator) {
-            zoomIndicator.innerText = Math.round(scale * 100) + '%';
         }
     },
 
