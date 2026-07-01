@@ -1,0 +1,14 @@
+{
+  "ios": {
+    "release": {
+      "codeSignIdentity": "",
+      "codeSigningRequired": false,
+      "codeSigningAllowed": false
+    },
+    "debug": {
+      "codeSignIdentity": "",
+      "codeSigningRequired": false,
+      "codeSigningAllowed": false
+    }
+  }
+}

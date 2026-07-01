@@ -35,9 +35,10 @@ jobs:
       - name: Build iOS App (Unsigned)
         run: |
           cordova build ios --release --device \
-            --buildFlag="CODE_SIGNING_ALLOWED=NO" \
-            --buildFlag="CODE_SIGNING_REQUIRED=NO" \
-            --buildFlag="CODE_SIGN_IDENTITY="
+            --buildConfig=build.json \
+            --buildFlag="-CODE_SIGNING_ALLOWED=NO" \
+            --buildFlag="-CODE_SIGNING_REQUIRED=NO" \
+            --buildFlag="-CODE_SIGN_IDENTITY=''"
 
       - name: Package Unsigned IPA
         run: |
