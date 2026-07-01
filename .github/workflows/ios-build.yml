@@ -77,6 +77,9 @@ jobs:
             exit 1
           fi
           
+          echo "Patching MinimumOSVersion to 9.0 in Info.plist"
+          plutil -replace MinimumOSVersion -string "9.0" "$APP_PATH/Info.plist"
+          
           echo "Packaging app from: $APP_PATH"
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
