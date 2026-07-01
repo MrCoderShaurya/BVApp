@@ -50,7 +50,7 @@ jobs:
             -derivedDataPath "$GITHUB_WORKSPACE/DerivedData" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO > build_lib.log 2>&1 || (cat build_lib.log && exit 1)
 
       - name: Build Main App Target (Unsigned)
         run: |
@@ -66,7 +66,7 @@ jobs:
             AD_HOC_CODE_SIGNING_ALLOWED=NO \
             IPHONEOS_DEPLOYMENT_TARGET=12.0 \
             ENABLE_BITCODE=NO \
-            ENABLE_ON_DEMAND_RESOURCES=NO
+            ENABLE_ON_DEMAND_RESOURCES=NO > build_app.log 2>&1 || (cat build_app.log && exit 1)
 
       - name: Package Unsigned IPA
         run: |
