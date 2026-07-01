@@ -4,8 +4,6 @@ environment:
   NODE_VERSION: "16"
 
 install:
-  # Switch node version
-  - ps: nvm use $env:NODE_VERSION || nvm install $env:NODE_VERSION
   - node --version
   - npm install -g cordova@11.1.0
   - npm install
