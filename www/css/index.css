@@ -228,7 +228,7 @@ body.dark-mode .editor-date { color: #718096; }
 }
 
 /* Full height views for iframes */
-#view-lectures, #view-bhajans, #view-reading, #view-calendar {
+#view-lectures, #view-bhajans, #view-reading, #view-calendar, #view-radheshyam {
     overflow: hidden; /* Iframe handles its own scroll */
 }
 

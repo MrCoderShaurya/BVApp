@@ -649,7 +649,7 @@ var BVApp = {
             else if (tabId === 'bhajans') titleNode.innerText = 'Bhajans';
             else if (tabId === 'reading') titleNode.innerText = 'Reading';
             else if (tabId === 'calendar') titleNode.innerText = 'Calendar';
-            else if (tabId === 'radheshyam') titleNode.innerText = 'Radheshyam Das';
+            else if (tabId === 'radheshyam') titleNode.innerText = 'VOICE';
         }
 
         // 4. Trigger iframe load for remote tabs (with connectivity support)
