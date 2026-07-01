@@ -34,24 +34,22 @@ jobs:
 
       - name: Build iOS App (Unsigned)
         run: |
-          mkdir -p build
           cordova build ios --release --device \
             --buildFlag="CODE_SIGNING_ALLOWED=NO" \
             --buildFlag="CODE_SIGNING_REQUIRED=NO" \
-            --buildFlag="CODE_SIGN_IDENTITY=" \
-            --buildFlag="CONFIGURATION_BUILD_DIR=$GITHUB_WORKSPACE/build"
+            --buildFlag="CODE_SIGN_IDENTITY="
 
       - name: Package Unsigned IPA
         run: |
-          # The app file is now guaranteed to be in the build directory
-          APP_PATH=$(find build -name "*.app" | head -1)
+          # Find the app file in standard locations
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -not -path "*/intermediates/*" | head -1)
           if [ -z "$APP_PATH" ]; then
-            echo "Searching wider workspace..."
-            APP_PATH=$(find . -name "*.app" -not -path "*/node_modules/*" | head -1)
+            echo "Searching workspace..."
+            APP_PATH=$(find platforms/ios -name "*.app" -not -path "*/intermediates/*" | head -1)
           fi
           
           if [ -z "$APP_PATH" ]; then
-            echo "❌ Error: Could not find any .app files. The build must have failed."
+            echo "❌ Error: Could not find any compiled .app files."
             exit 1
           fi
           
