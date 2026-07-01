@@ -51,6 +51,5 @@
         <preference name="UIWebViewBounce" value="false" />
         <preference name="EnableViewportScale" value="true" />
     </platform>
-    <plugin name="cordova-plugin-volume-control" spec="https://github.com/jlorente/cordova-plugin-volume-control.git" />
 
 </widget>
