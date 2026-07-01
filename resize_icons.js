@@ -7,15 +7,38 @@ if (process.platform !== 'darwin') {
   process.exit(0);
 }
 
-const contentsJsonPath = path.join('platforms', 'ios', 'Bhakti Vedanta App', 'Images.xcassets', 'AppIcon.appiconset', 'Contents.json');
-const sourceIcon = fs.existsSync('BVicon.png') ? 'BVicon.png' : path.join('www', 'img', 'bvicon.png');
+function findContentsJson(dir) {
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      if (file === 'AppIcon.appiconset') {
+        const jsonPath = path.join(fullPath, 'Contents.json');
+        if (fs.existsSync(jsonPath)) {
+          return jsonPath;
+        }
+      }
+      const found = findContentsJson(fullPath);
+      if (found) return found;
+    }
+  }
+  return null;
+}
 
-if (!fs.existsSync(contentsJsonPath)) {
-  console.error('ERROR: Contents.json not found at:', contentsJsonPath);
+const iosDir = path.join('platforms', 'ios');
+const contentsJsonPath = findContentsJson(iosDir);
+
+if (!contentsJsonPath) {
+  console.error('ERROR: Contents.json inside AppIcon.appiconset not found under platforms/ios');
   process.exit(1);
 }
 
+const sourceIcon = fs.existsSync('BVicon.png') ? 'BVicon.png' : path.join('www', 'img', 'bvicon.png');
+console.log(`Found Contents.json at: ${contentsJsonPath}`);
 console.log(`Using source icon: ${sourceIcon}`);
+
 const contents = JSON.parse(fs.readFileSync(contentsJsonPath, 'utf8'));
 const appiconsetDir = path.dirname(contentsJsonPath);
 

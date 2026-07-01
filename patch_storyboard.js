@@ -1,10 +1,27 @@
 const fs = require('fs');
 const path = require('path');
 
-const storyboardPath = path.join('platforms', 'ios', 'Bhakti Vedanta App', 'CDVLaunchScreen.storyboard');
+function findStoryboard(dir) {
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      const found = findStoryboard(fullPath);
+      if (found) return found;
+    } else if (file === 'CDVLaunchScreen.storyboard') {
+      return fullPath;
+    }
+  }
+  return null;
+}
 
-if (fs.existsSync(storyboardPath)) {
-  console.log('Found CDVLaunchScreen.storyboard. Patching for iOS 9 compatibility...');
+const iosDir = path.join('platforms', 'ios');
+const storyboardPath = findStoryboard(iosDir);
+
+if (storyboardPath && fs.existsSync(storyboardPath)) {
+  console.log(`Found CDVLaunchScreen.storyboard at: ${storyboardPath}. Patching for iOS 9 compatibility...`);
   let content = fs.readFileSync(storyboardPath, 'utf8');
   
   // Find all color tags in the file to log them
@@ -26,6 +43,6 @@ if (fs.existsSync(storyboardPath)) {
     console.log('Could not find backgroundColor tag to patch.');
   }
 } else {
-  console.error('ERROR: CDVLaunchScreen.storyboard not found at:', storyboardPath);
+  console.error('ERROR: CDVLaunchScreen.storyboard not found under platforms/ios');
   process.exit(1);
 }
