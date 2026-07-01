@@ -4,7 +4,7 @@
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
     <name>Bhakti Vedanta App</name>
-    <icon src="BVicon.png" />
+    <!-- <icon src="BVicon.png" /> -->
     <description>
         Bhakti Vedanta App - A spiritual resource app for audio, calendar, and scripture.
     </description>
