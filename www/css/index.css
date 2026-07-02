@@ -1030,7 +1030,6 @@ body.dark-mode .fab-btn {
     left: 0;
     right: 0;
     width: 100%;
-    height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Forces momentum touch scroll in iOS WebKit */
