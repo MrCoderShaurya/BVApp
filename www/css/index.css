@@ -31,6 +31,7 @@ body {
     /* Main window doesn't scroll; individual views scroll */
     position: fixed;
     /* Lock viewport frame in place */
+    overscroll-behavior: none;
 }
 
 input,
@@ -1033,6 +1034,7 @@ body.dark-mode .fab-btn {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Forces momentum touch scroll in iOS WebKit */
+    overscroll-behavior: none;
 }
 
 .content-iframe {

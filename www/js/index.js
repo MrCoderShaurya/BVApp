@@ -1459,12 +1459,10 @@ var BVApp = {
             var target = e.target;
             var isScrollable = false;
             
-            // Check if touch originates inside scrollable content containers or standard interactive widgets
+            // Check if touch originates inside scrollable content containers or specific touch-drag inputs (like range sliders)
             while (target && target !== document.body) {
-                if (target.tagName === 'INPUT' || 
-                    target.tagName === 'TEXTAREA' || 
-                    target.tagName === 'SELECT' || 
-                    target.tagName === 'BUTTON') {
+                if ((target.tagName === 'INPUT' && target.type === 'range') || 
+                    target.tagName === 'TEXTAREA') {
                     isScrollable = true;
                     break;
                 }
