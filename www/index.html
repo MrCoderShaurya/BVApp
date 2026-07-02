@@ -412,42 +412,6 @@
                     </table>
                 </div>
             </div>
-        <!-- Section 6: System Volume Control -->
-        <section id="view-booster" class="content-view">
-            <div class="booster-container">
-                <div class="booster-card">
-                    <h2 class="booster-title">Volume Control</h2>
-                    <p class="booster-subtitle">Adjust your device's system playback and media volume</p>
-                    
-                    <div class="booster-viz-wrapper">
-                        <div id="volume-visualizer-circle" class="booster-viz">
-                            <svg viewBox="0 0 24 24">
-                                <path fill="currentColor" id="volume-icon-path" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <div class="booster-slider-group">
-                        <div class="booster-slider-label">
-                            <span>System Volume</span>
-                            <span id="system-volume-value" class="val">50%</span>
-                        </div>
-                        <input type="range" id="slider-system-volume" class="booster-slider" min="0" max="100" value="50">
-                    </div>
-
-                    <div class="booster-controls">
-                        <button id="btn-volume-mute" class="booster-ctrl-btn" title="Mute Volume">
-                            <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" id="mute-btn-icon-path" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM3 9v6h4l5 5V4L7 9H3z" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="booster-offline-section">
-                        <p id="volume-status-text" class="booster-status">Alters device system volume. Compatible with Lectures & Bhajans tabs.</p>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- Section 5: Local Notes (Offline App) -->
@@ -512,16 +476,9 @@
                     <input type="text" id="note-title-input" placeholder="Title" class="editor-title-field">
                     <div class="editor-date" id="note-date-display">Created date</div>
 
-                    <!-- Unified Ribbon Tool Selection Row -->
+                    <!-- Unified Ribbon Tool Selection Row (Drawing Mode Only) -->
                     <div class="editor-tools-ribbon">
-                        <button type="button" id="btn-tool-text" class="tool-select-btn active" title="Text realization mode">
-                            <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor"
-                                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                            </svg>
-                            <span>Text</span>
-                        </button>
-                        <button type="button" id="btn-tool-pen" class="tool-select-btn" title="Pen drawing mode">
+                        <button type="button" id="btn-tool-pen" class="tool-select-btn active" title="Pen drawing mode">
                             <svg viewBox="0 0 24 24" width="18" height="18">
                                 <path fill="currentColor"
                                     d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
@@ -547,61 +504,8 @@
 
                     <!-- Dynamic Formatting Tray -->
                     <div class="editor-format-tray">
-                        <!-- Text Formatting subtray (Hidden) -->
-                        <div class="format-subtray hidden" id="format-tray-text">
-                            <div class="canvas-toolbar-row">
-                                <!-- Bold / Italic Toggles -->
-                                <div class="toolbar-group">
-                                    <button type="button" id="btn-text-bold" class="canvas-tool-btn" title="Bold">
-                                        <svg viewBox="0 0 24 24" width="18" height="18">
-                                            <path fill="currentColor"
-                                                d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 11H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" id="btn-text-italic" class="canvas-tool-btn" title="Italic">
-                                        <svg viewBox="0 0 24 24" width="18" height="18">
-                                            <path fill="currentColor"
-                                                d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <!-- Text Font Size Select -->
-                                <div class="toolbar-group">
-                                    <span class="toolbar-label">Size:</span>
-                                    <select id="select-text-size" class="canvas-select">
-                                        <option value="13px">Small</option>
-                                        <option value="15px" selected>Normal</option>
-                                        <option value="18px">Large</option>
-                                        <option value="22px">X-Large</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="canvas-toolbar-row">
-                                <!-- Text Color Palette Swatches -->
-                                <div class="toolbar-group colors-group">
-                                    <span class="toolbar-label">Text Color:</span>
-                                    <div class="color-palette">
-                                        <div class="text-color-swatch active" data-color="#2d3748"
-                                            style="background-color: #2d3748;" title="Black/Charcoal"></div>
-                                        <div class="text-color-swatch" data-color="#f26522"
-                                            style="background-color: #f26522;" title="Saffron"></div>
-                                        <div class="text-color-swatch" data-color="#e53e3e"
-                                            style="background-color: #e53e3e;" title="Red"></div>
-                                        <div class="text-color-swatch" data-color="#3182ce"
-                                            style="background-color: #3182ce;" title="Blue"></div>
-                                        <div class="text-color-swatch" data-color="#38a169"
-                                            style="background-color: #38a169;" title="Green"></div>
-                                        <div class="text-color-swatch" data-color="#805ad5"
-                                            style="background-color: #805ad5;" title="Purple"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Drawing Formatting subtray -->
-                        <div class="format-subtray hidden" id="format-tray-draw">
+                        <div class="format-subtray" id="format-tray-draw">
                             <div class="canvas-toolbar-row">
                                 <!-- Brush Size Dropdown -->
                                 <div class="toolbar-group">
@@ -653,10 +557,8 @@
                         </div>
                     </div>
 
-                    <!-- Layered Workspace (Bottom: Text Input, Top: Drawing Canvas Overlay) -->
+                    <!-- Workspace (Drawing Canvas Only) -->
                     <div class="editor-workspace-container">
-                        <textarea id="note-content-input" placeholder="Start writing down your realization..."
-                            class="editor-content-field"></textarea>
                         <div class="canvas-container">
                             <canvas id="note-canvas" width="1200" height="960"></canvas>
                         </div>
@@ -665,6 +567,7 @@
             </div>
         </section>
     </main>
+
 
     <!-- Bottom Navigation Bar -->
     <nav class="app-nav">
@@ -701,12 +604,6 @@
                     d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z" />
             </svg>
             <span class="nav-label">Calendar</span>
-        </button>
-        <button class="nav-tab" data-tab="booster">
-            <svg viewBox="0 0 24 24" class="nav-icon">
-                <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-            </svg>
-            <span class="nav-label">Volume</span>
         </button>
         <button class="nav-tab" data-tab="notes">
             <svg viewBox="0 0 24 24" class="nav-icon">

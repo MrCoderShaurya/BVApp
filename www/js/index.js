@@ -119,7 +119,6 @@ var BVApp = {
 
         this.initTheme();
         this.initOfflineDetection();
-        this.initVolumeControl();
         this.initNotes();
         this.renderBookmarks();
         this.bindEvents();
@@ -353,50 +352,28 @@ var BVApp = {
                 }
             });
         }
-
-        // --- System Volume Action Listeners ---
-        var volumeSlider = document.getElementById('slider-system-volume');
-        var muteBtn = document.getElementById('btn-volume-mute');
-
-        if (volumeSlider) {
-            volumeSlider.addEventListener('input', function() {
-                self.setSystemVolume(this.value);
-            });
-        }
-        if (muteBtn) {
-            muteBtn.addEventListener('click', function() {
-                self.toggleSystemMute();
-            });
-        }
     },
 
     setActiveTool: function(toolName) {
         appState.activeTool = toolName;
         
-        var btnText = document.getElementById('btn-tool-text');
         var btnPen = document.getElementById('btn-tool-pen');
         var btnEraser = document.getElementById('btn-tool-eraser');
 
-        if (btnText) btnText.classList.remove('active');
         if (btnPen) btnPen.classList.remove('active');
         if (btnEraser) btnEraser.classList.remove('active');
 
-        if (toolName === 'text' && btnText) btnText.classList.add('active');
-        else if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
+        if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
         else if (toolName === 'eraser' && btnEraser) btnEraser.classList.add('active');
 
         // Toggle Formatting Trays
-        var trayText = document.getElementById('format-tray-text');
         var trayDraw = document.getElementById('format-tray-draw');
         var trayEraser = document.getElementById('format-tray-eraser');
 
-        if (trayText) trayText.classList.add('hidden');
         if (trayDraw) trayDraw.classList.add('hidden');
         if (trayEraser) trayEraser.classList.add('hidden');
 
-        if (toolName === 'text') {
-            if (trayText) trayText.classList.remove('hidden');
-        } else if (toolName === 'pen') {
+        if (toolName === 'pen') {
             if (trayDraw) trayDraw.classList.remove('hidden');
         } else if (toolName === 'eraser') {
             if (trayEraser) trayEraser.classList.remove('hidden');
@@ -407,7 +384,6 @@ var BVApp = {
         if (editorSubview) {
             editorSubview.classList.remove('view-mode-text');
             editorSubview.classList.remove('view-mode-pen');
-            editorSubview.classList.remove('view-mode-highlighter');
             editorSubview.classList.remove('view-mode-eraser');
             editorSubview.classList.add('view-mode-' + toolName);
         }
@@ -419,7 +395,7 @@ var BVApp = {
     // --- Sketchpad Drawing Handlers ---
     initCanvasEvents: function() {
         var self = this;
-        var canvas = document.getElementById('note-canvas');
+        var canvas = this.canvasElement;
         if (!canvas) return;
 
         // Formats Select & swatches
@@ -428,12 +404,16 @@ var BVApp = {
         var swatches = document.querySelectorAll('.color-swatch');
 
         // Size changes
-        selectBrushSize.addEventListener('change', function() {
-            appState.currentSize = parseInt(this.value, 10);
-        });
-        selectEraserSize.addEventListener('change', function() {
-            appState.currentEraserSize = parseInt(this.value, 10);
-        });
+        if (selectBrushSize) {
+            selectBrushSize.addEventListener('change', function() {
+                appState.currentSize = parseInt(this.value, 10);
+            });
+        }
+        if (selectEraserSize) {
+            selectEraserSize.addEventListener('change', function() {
+                appState.currentEraserSize = parseInt(this.value, 10);
+            });
+        }
 
         // Color Swatches
         for (var i = 0; i < swatches.length; i++) {
@@ -452,7 +432,7 @@ var BVApp = {
             });
         }
 
-        // Draw Touch Events (Crucial for iOS 9.3.5 Tablets & Phones)
+        // Draw Touch Events
         canvas.addEventListener('touchstart', function(e) {
             self.startDrawing(e);
         }, false);
@@ -466,7 +446,7 @@ var BVApp = {
             self.stopDrawing();
         }, false);
 
-        // Draw Mouse Events (For desktop browser testing)
+        // Draw Mouse Events
         canvas.addEventListener('mousedown', function(e) {
             self.startDrawing(e);
         }, false);
@@ -479,14 +459,21 @@ var BVApp = {
         canvas.addEventListener('mouseleave', function(e) {
             self.stopDrawing();
         }, false);
+
+        // Clear Button listener
+        var clearBtn = document.getElementById('btn-tool-clear');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                self.clearCanvas();
+            });
+        }
     },
 
-
     clearCanvas: function() {
-        var canvas = document.getElementById('note-canvas');
+        var canvas = this.canvasElement;
         if (!canvas) return;
-        var ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        var ctx = this.canvasContext;
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Clear base64 image link
         var note = this.findNoteById(appState.activeNoteId);
@@ -510,7 +497,6 @@ var BVApp = {
             clientY = e.clientY;
         }
         
-        // Maps relative coordinate offsets on display size to the 600x400 coordinate size
         var x = rect.width ? (clientX - rect.left) * (canvas.width / rect.width) : 0;
         var y = rect.height ? (clientY - rect.top) * (canvas.height / rect.height) : 0;
         
@@ -518,10 +504,9 @@ var BVApp = {
     },
 
     startDrawing: function(e) {
-        e.preventDefault(); // Lock scroll operations inside canvas bounds
+        e.preventDefault();
         appState.isDrawing = true;
         
-        // Cache canvas bounding client rect when drawing starts to prevent layout thrashing on move
         if (this.canvasElement) {
             this.cachedCanvasRect = this.canvasElement.getBoundingClientRect();
         }
@@ -533,26 +518,21 @@ var BVApp = {
 
     draw: function(e) {
         if (!appState.isDrawing) return;
-        e.preventDefault(); // Lock scroll operations inside canvas bounds
+        e.preventDefault();
 
         var canvas = this.canvasElement;
         if (!canvas) return;
         var ctx = this.canvasContext;
+        if (!ctx) return;
         var coords = this.getCoords(e);
 
         ctx.beginPath();
         ctx.moveTo(appState.lastX, appState.lastY);
         ctx.lineTo(coords.x, coords.y);
 
-        // Configure brush properties based on selected tool
         if (appState.currentTool === 'eraser') {
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.lineWidth = appState.currentEraserSize || 12; // Eraser size read from eraser-specific select!
-        } else if (appState.currentTool === 'highlighter') {
-            ctx.globalCompositeOperation = 'source-over';
-            // Helper converts hex to RGBA to produce transparent highlight overlaps
-            ctx.strokeStyle = this.convertHexToRGBA(appState.currentColor, 0.3);
-            ctx.lineWidth = appState.currentSize * 2.5;
+            ctx.lineWidth = appState.currentEraserSize || 12;
         } else {
             ctx.globalCompositeOperation = 'source-over';
             ctx.strokeStyle = appState.currentColor;
@@ -574,20 +554,6 @@ var BVApp = {
             appState.isDrawing = false;
             this.triggerAutoSave();
         }
-    },
-
-    convertHexToRGBA: function(hex, alpha) {
-        var r = 0, g = 0, b = 0;
-        if (hex.length === 4) {
-            r = parseInt(hex[1] + hex[1], 16);
-            g = parseInt(hex[2] + hex[2], 16);
-            b = parseInt(hex[3] + hex[3], 16);
-        } else if (hex.length === 7) {
-            r = parseInt(hex.substring(1, 3), 16);
-            g = parseInt(hex.substring(3, 5), 16);
-            b = parseInt(hex.substring(5, 7), 16);
-        }
-        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
     },
 
     // --- Tab Switching Logic ---
@@ -645,9 +611,6 @@ var BVApp = {
                 document.getElementById('notes-list-subview').classList.add('active');
                 document.getElementById('notes-editor-subview').classList.remove('active');
                 this.renderNotesList('');
-            } else if (tabId === 'booster') {
-                titleNode.innerText = 'Volume Control';
-                refreshBtn.classList.add('hidden');
             } else if (tabId === 'lectures') titleNode.innerText = 'Lectures';
             else if (tabId === 'bhajans') titleNode.innerText = 'Bhajans';
             else if (tabId === 'reading') titleNode.innerText = 'Reading';
@@ -710,6 +673,8 @@ var BVApp = {
         if (tabId === 'dashboard') {
             this.renderRecentNoteOnDashboard();
         }
+
+
     },
 
     refreshActiveView: function() {
@@ -835,7 +800,15 @@ var BVApp = {
         try {
             var raw = localStorage.getItem('bv_notes');
             if (raw) {
-                appState.notes = JSON.parse(raw);
+                var parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    // Safe filter: ensure every note is a non-null object with an ID
+                    appState.notes = parsed.filter(function(note) {
+                        return note && typeof note === 'object' && note.id;
+                    });
+                } else {
+                    appState.notes = [];
+                }
             } else {
                 appState.notes = [];
             }
@@ -981,7 +954,6 @@ var BVApp = {
     openEditor: function(noteId) {
         var self = this;
         var titleField = this.noteTitleInput;
-        var contentField = this.noteContentInput;
         var dateDisplay = this.dateDisplayNode;
         var pinBtn = this.pinBtn;
         var canvas = this.canvasElement;
@@ -991,10 +963,12 @@ var BVApp = {
         document.getElementById('notes-editor-subview').classList.add('active');
 
         // Clear canvas context to prevent bleed through
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (ctx && canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
-        // Reset Ribbon Tool Selection to 'text' default
-        this.setActiveTool('text');
+        // Reset Ribbon Tool Selection to 'pen' default
+        this.setActiveTool('pen');
 
         // Reset brush tool settings in UI
         appState.currentColor = '#2d3748';
@@ -1009,8 +983,10 @@ var BVApp = {
                 swatches[i].classList.remove('active');
             }
         }
-        document.getElementById('select-brush-size').value = '3';
-        document.getElementById('select-eraser-size').value = '12';
+        var selectBrushSize = document.getElementById('select-brush-size');
+        if (selectBrushSize) selectBrushSize.value = '3';
+        var selectEraserSize = document.getElementById('select-eraser-size');
+        if (selectEraserSize) selectEraserSize.value = '12';
 
         if (noteId === null) {
             // New Note
@@ -1032,85 +1008,35 @@ var BVApp = {
             this.saveNotes();
             appState.canvasHasDrawing = false;
 
-            titleField.value = '';
-            contentField.value = '';
-            dateDisplay.innerText = this.formatDateString(newNote.created);
-            pinBtn.classList.remove('pinned');
-            pinBtn.title = 'Pin Note';
-
-            // Reset text editor formatting active UI states
-            document.getElementById('btn-text-bold').classList.remove('active');
-            document.getElementById('btn-text-italic').classList.remove('active');
-            document.getElementById('select-text-size').value = '15px';
-            
-            var textSwatches = document.querySelectorAll('.text-color-swatch');
-            for (var i = 0; i < textSwatches.length; i++) {
-                if (textSwatches[i].getAttribute('data-color') === '#2d3748') {
-                    textSwatches[i].classList.add('active');
-                } else {
-                    textSwatches[i].classList.remove('active');
-                }
+            if (titleField) titleField.value = '';
+            if (dateDisplay) dateDisplay.innerText = this.formatDateString(newNote.created);
+            if (pinBtn) {
+                pinBtn.classList.remove('pinned');
+                pinBtn.title = 'Pin Note';
             }
-
-            // Apply default style overrides
-            this.applyTextFormatting(newNote);
-
-            // Focus content
-            setTimeout(function() { contentField.focus(); }, 100);
         } else {
             // Edit existing note
             appState.activeNoteId = noteId;
             var note = this.findNoteById(noteId);
             if (note) {
-                // Initialize default parameters if note is from a previous session and misses them
-                if (note.bold === undefined) note.bold = false;
-                if (note.italic === undefined) note.italic = false;
-                if (note.fontSize === undefined) note.fontSize = '15px';
-                if (note.textColor === undefined) note.textColor = '#2d3748';
-
-                titleField.value = note.title;
-                contentField.value = note.content;
-                dateDisplay.innerText = 'Last modified: ' + this.formatDateString(note.modified);
+                if (titleField) titleField.value = note.title || '';
+                if (dateDisplay) dateDisplay.innerText = 'Last modified: ' + this.formatDateString(note.modified);
                 
-                if (note.pinned) {
-                    pinBtn.classList.add('pinned');
-                    pinBtn.title = 'Unpin Note';
-                } else {
-                    pinBtn.classList.remove('pinned');
-                    pinBtn.title = 'Pin Note';
-                }
-
-                // Toggle bold active styling
-                var btnBold = document.getElementById('btn-text-bold');
-                if (note.bold) btnBold.classList.add('active');
-                else btnBold.classList.remove('active');
-
-                // Toggle italic active styling
-                var btnItalic = document.getElementById('btn-text-italic');
-                if (note.italic) btnItalic.classList.add('active');
-                else btnItalic.classList.remove('active');
-
-                // Set size select value
-                document.getElementById('select-text-size').value = note.fontSize;
-
-                // Set active text color swatch
-                var textSwatches = document.querySelectorAll('.text-color-swatch');
-                for (var i = 0; i < textSwatches.length; i++) {
-                    if (textSwatches[i].getAttribute('data-color') === note.textColor) {
-                        textSwatches[i].classList.add('active');
+                if (pinBtn) {
+                    if (note.pinned) {
+                        pinBtn.classList.add('pinned');
+                        pinBtn.title = 'Unpin Note';
                     } else {
-                        textSwatches[i].classList.remove('active');
+                        pinBtn.classList.remove('pinned');
+                        pinBtn.title = 'Pin Note';
                     }
                 }
 
-                // Apply style overrides
-                this.applyTextFormatting(note);
-
                 // Load existing canvas drawing
-                if (note.image) {
+                if (note.image && ctx) {
                     var img = new Image();
                     img.onload = function() {
-                        ctx.drawImage(img, 0, 0);
+                        if (ctx) ctx.drawImage(img, 0, 0);
                     };
                     img.src = note.image;
                     appState.canvasHasDrawing = true;
@@ -1121,7 +1047,8 @@ var BVApp = {
         }
 
         // Set state status in editor toolbar
-        document.getElementById('editor-status').innerText = 'Saved';
+        var statusNode = document.getElementById('editor-status');
+        if (statusNode) statusNode.innerText = 'Saved';
     },
 
     closeEditor: function() {
@@ -1265,115 +1192,7 @@ var BVApp = {
         return month + ' ' + day + ', ' + year + ' ' + hours + ':' + minutes;
     },
 
-    initVolumeControl: function() {
-        var self = this;
-        var volumeSlider = document.getElementById('slider-system-volume');
-        var volumeValue = document.getElementById('system-volume-value');
-        var muteBtn = document.getElementById('btn-volume-mute');
-        
-        var VolumeControl = (window.cordova && window.cordova.plugins && window.cordova.plugins.VolumeControl) ? window.cordova.plugins.VolumeControl : null;
-        
-        if (VolumeControl) {
-            VolumeControl.getVolume(function(val) {
-                var volPct = Math.round(val * 100);
-                if (volumeSlider) volumeSlider.value = volPct;
-                if (volumeValue) volumeValue.innerText = volPct + '%';
-                self.updateVolumeUI(volPct);
-            });
-            
-            VolumeControl.isMuted(function(muted) {
-                if (muted && muteBtn) {
-                    muteBtn.classList.add('active');
-                }
-            });
-        } else {
-            var cachedVol = localStorage.getItem('bv_simulated_volume') || '50';
-            if (volumeSlider) volumeSlider.value = cachedVol;
-            if (volumeValue) volumeValue.innerText = cachedVol + '%';
-            this.updateVolumeUI(parseInt(cachedVol, 10));
-        }
-    },
-    
-    setSystemVolume: function(val) {
-        var volPct = parseInt(val, 10);
-        var VolumeControl = (window.cordova && window.cordova.plugins && window.cordova.plugins.VolumeControl) ? window.cordova.plugins.VolumeControl : null;
-        
-        var volumeValue = document.getElementById('system-volume-value');
-        if (volumeValue) {
-            volumeValue.innerText = volPct + '%';
-        }
-        
-        this.updateVolumeUI(volPct);
-        
-        if (VolumeControl) {
-            VolumeControl.setVolume(volPct / 100);
-        } else {
-            localStorage.setItem('bv_simulated_volume', val);
-        }
-    },
-    
-    toggleSystemMute: function() {
-        var self = this;
-        var VolumeControl = (window.cordova && window.cordova.plugins && window.cordova.plugins.VolumeControl) ? window.cordova.plugins.VolumeControl : null;
-        var muteBtn = document.getElementById('btn-volume-mute');
-        
-        if (VolumeControl) {
-            VolumeControl.toggleMute();
-            VolumeControl.isMuted(function(muted) {
-                if (muteBtn) {
-                    if (muted) {
-                        muteBtn.classList.add('active');
-                        muteBtn.title = 'Unmute Volume';
-                    } else {
-                        muteBtn.classList.remove('active');
-                        muteBtn.title = 'Mute Volume';
-                    }
-                }
-            });
-        } else {
-            if (muteBtn) {
-                var isMuted = muteBtn.classList.contains('active');
-                if (isMuted) {
-                    muteBtn.classList.remove('active');
-                    muteBtn.title = 'Mute Volume';
-                    var volumeSlider = document.getElementById('slider-system-volume');
-                    var volVal = volumeSlider ? volumeSlider.value : 50;
-                    this.setSystemVolume(volVal);
-                } else {
-                    muteBtn.classList.add('active');
-                    muteBtn.title = 'Unmute Volume';
-                    var volumeValue = document.getElementById('system-volume-value');
-                    if (volumeValue) volumeValue.innerText = '0%';
-                    this.updateVolumeUI(0);
-                }
-            }
-        }
-    },
-    
-    updateVolumeUI: function(volPct) {
-        var viz = document.getElementById('volume-visualizer-circle');
-        if (viz) {
-            viz.style.transform = 'scale(' + (1.0 + (volPct / 100) * 0.4) + ')';
-            viz.style.boxShadow = '0 0 ' + (20 + (volPct / 100) * 30) + 'px rgba(242, 101, 34, ' + (0.3 + (volPct / 100) * 0.3) + ')';
-        }
-    },
 
-    applyTextFormatting: function(note) {
-        var textarea = this.noteContentInput;
-        if (!textarea) return;
-        
-        if (note) {
-            textarea.style.fontWeight = note.bold ? 'bold' : 'normal';
-            textarea.style.fontStyle = note.italic ? 'italic' : 'normal';
-            textarea.style.fontSize = note.fontSize || '15px';
-            textarea.style.color = note.textColor || '#2d3748';
-        } else {
-            textarea.style.fontWeight = 'normal';
-            textarea.style.fontStyle = 'normal';
-            textarea.style.fontSize = '15px';
-            textarea.style.color = '#2d3748';
-        }
-    },
 
     escapeHTML: function(str) {
         if (!str) return '';
