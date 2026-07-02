@@ -314,24 +314,31 @@ var BVApp = {
         var titleField = document.getElementById('note-title-input');
         var contentField = document.getElementById('note-content-input');
 
-        titleField.addEventListener('input', function() {
-            self.triggerAutoSave();
-        });
-        contentField.addEventListener('input', function() {
-            self.triggerAutoSave();
-        });
+        if (titleField) {
+            titleField.addEventListener('input', function() {
+                self.triggerAutoSave();
+            });
+        }
+        if (contentField) {
+            contentField.addEventListener('input', function() {
+                self.triggerAutoSave();
+            });
+        }
 
         // Catch clicks on Dashboard Recent Note Card
-        document.getElementById('dash-recent-note').addEventListener('click', function() {
-            if (appState.notes.length > 0) {
-                // Find latest modified note
-                var sorted = appState.notes.slice().sort(function(a, b) {
-                    return b.modified - a.modified;
-                });
-                self.switchTab('notes');
-                self.openEditor(sorted[0].id);
-            }
-        });
+        var dashRecentNote = document.getElementById('dash-recent-note');
+        if (dashRecentNote) {
+            dashRecentNote.addEventListener('click', function() {
+                if (appState.notes.length > 0) {
+                    // Find latest modified note
+                    var sorted = appState.notes.slice().sort(function(a, b) {
+                        return b.modified - a.modified;
+                    });
+                    self.switchTab('notes');
+                    self.openEditor(sorted[0].id);
+                }
+            });
+        }
 
         // Accordion headers toggle listener (Offline Songbooks & Scriptures)
         var accHeaders = document.querySelectorAll('.accordion-header');
@@ -1093,8 +1100,8 @@ var BVApp = {
             var contentField = this.noteContentInput;
             var canvas = this.canvasElement;
             
-            note.title = titleField.value.trim();
-            note.content = contentField.value;
+            note.title = titleField ? titleField.value.trim() : '';
+            note.content = contentField ? contentField.value : '';
             note.modified = Date.now();
 
             // Export canvas content as base64 PNG data URL if user drew anything

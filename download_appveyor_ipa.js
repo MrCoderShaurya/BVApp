@@ -52,13 +52,13 @@ async function poll() {
     const responseText = await makeRequest(PROJECT_API);
     const data = JSON.parse(responseText);
     
-    if (!data.project || !data.project.builds || data.project.builds.length === 0) {
+    if (!data.build) {
       console.log('No builds found on AppVeyor yet. Please click "New Build" on your AppVeyor project dashboard: https://ci.appveyor.com/project/MrCoderShaurya/bvapp');
       setTimeout(poll, 15000);
       return;
     }
 
-    const latestBuild = data.project.builds[0];
+    const latestBuild = data.build;
     const status = latestBuild.status;
     const version = latestBuild.version;
     console.log(`Latest Build version: ${version}, Status: ${status.toUpperCase()}`);
