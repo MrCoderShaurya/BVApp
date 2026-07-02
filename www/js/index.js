@@ -1424,24 +1424,10 @@ var BVApp = {
         if (!iframe) return;
         
         var scale = zoomPct / 100;
-        
-        // Use native zoom/webkitZoom for WebKit engines to maintain buttery smooth native momentum scrolling
-        if ('zoom' in iframe.style || 'webkitZoom' in iframe.style) {
-            iframe.style.zoom = scale;
-            iframe.style.webkitZoom = scale;
-            
-            // Clean up any scale transforms and restore full width/height
-            iframe.style.transform = '';
-            iframe.style.transformOrigin = '';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-        } else {
-            // Fallback for non-WebKit browsers (like Firefox) that do not support zoom on iframes
-            iframe.style.transform = 'scale(' + scale + ')';
-            iframe.style.transformOrigin = 'top left';
-            iframe.style.width = (100 / scale) + '%';
-            iframe.style.height = (100 / scale) + '%';
-        }
+        iframe.style.transform = 'scale(' + scale + ')';
+        iframe.style.transformOrigin = 'top left';
+        iframe.style.width = (100 / scale) + '%';
+        iframe.style.height = (100 / scale) + '%';
     },
 
 
