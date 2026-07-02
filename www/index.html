@@ -61,6 +61,33 @@
 
     <!-- Main Content Area -->
     <main class="app-content">
+        <!-- Reader Tools Bar (Zoom, Highlight, Full Screen) -->
+        <div id="reader-tools-bar" class="reader-tools-bar hidden">
+            <div class="reader-tool-group">
+                <span class="reader-tool-label">Zoom:</span>
+                <button type="button" id="btn-zoom-out" class="reader-bar-btn" title="Zoom Out">—</button>
+                <input type="range" id="slider-zoom" class="reader-zoom-slider" min="50" max="200" value="100">
+                <button type="button" id="btn-zoom-in" class="reader-bar-btn" title="Zoom In">+</button>
+                <span id="zoom-value" class="reader-zoom-val">100%</span>
+            </div>
+            <div class="reader-tool-group">
+                <button type="button" id="btn-reader-highlight" class="reader-bar-btn" title="Highlight selection text">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: middle; margin-right: 4px; display: inline-block;">
+                        <path fill="currentColor" d="M18.5 2h-12C5.12 2 4 3.12 4 4.5v15C4 20.88 5.12 22 6.5 22h12c1.38 0 2.5-1.12 2.5-2.5v-15C21 3.12 19.88 2 18.5 2zm-5 17H7v-2h6.5v2zm4-4H7v-2h10v2zm0-4H7V9h10v2z"/>
+                    </svg>
+                    <span>Highlight</span>
+                </button>
+            </div>
+            <div class="reader-tool-group">
+                <button type="button" id="btn-reader-fullscreen" class="reader-bar-btn" title="Toggle Full Screen Mode">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: middle; margin-right: 4px; display: inline-block;">
+                        <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                    </svg>
+                    <span>Full Screen</span>
+                </button>
+            </div>
+        </div>
+
 
         <!-- Section 0: Dashboard (Home View) -->
         <section id="view-dashboard" class="content-view active">
@@ -476,14 +503,27 @@
                     <input type="text" id="note-title-input" placeholder="Title" class="editor-title-field">
                     <div class="editor-date" id="note-date-display">Created date</div>
 
-                    <!-- Unified Ribbon Tool Selection Row (Drawing Mode Only) -->
+                    <!-- Unified Ribbon Tool Selection Row -->
                     <div class="editor-tools-ribbon">
+                        <button type="button" id="btn-tool-text" class="tool-select-btn" title="Text realization mode">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="currentColor"
+                                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                            </svg>
+                            <span>Text</span>
+                        </button>
                         <button type="button" id="btn-tool-pen" class="tool-select-btn active" title="Pen drawing mode">
                             <svg viewBox="0 0 24 24" width="18" height="18">
                                 <path fill="currentColor"
                                     d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                             </svg>
                             <span>Pen</span>
+                        </button>
+                        <button type="button" id="btn-tool-highlighter" class="tool-select-btn" title="Highlighter brush mode">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="currentColor" d="M15.24 2.24l-3.54 3.54 3.75 3.75 3.54-3.54c.78-.78.78-2.05 0-2.83l-.91-.91c-.78-.78-2.05-.78-2.84 0zM3 14.5v3.75H6.75l10.81-10.81-3.75-3.75L3 14.5z"/>
+                            </svg>
+                            <span>Highlighter</span>
                         </button>
                         <button type="button" id="btn-tool-eraser" class="tool-select-btn" title="Eraser tool mode">
                             <svg viewBox="0 0 24 24" width="18" height="18">
@@ -504,6 +544,64 @@
 
                     <!-- Dynamic Formatting Tray -->
                     <div class="editor-format-tray">
+                        <!-- Text Formatting subtray (Hidden) -->
+                        <div class="format-subtray hidden" id="format-tray-text">
+                            <div class="canvas-toolbar-row">
+                                <!-- Bold / Italic / Highlight Toggles -->
+                                <div class="toolbar-group">
+                                    <button type="button" id="btn-text-bold" class="canvas-tool-btn" title="Bold">
+                                        <svg viewBox="0 0 24 24" width="18" height="18">
+                                            <path fill="currentColor"
+                                                d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 11H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" id="btn-text-italic" class="canvas-tool-btn" title="Italic">
+                                        <svg viewBox="0 0 24 24" width="18" height="18">
+                                            <path fill="currentColor"
+                                                d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" id="btn-text-highlight" class="canvas-tool-btn" title="Highlight text background">
+                                        <svg viewBox="0 0 24 24" width="18" height="18">
+                                            <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Text Font Size Select -->
+                                <div class="toolbar-group">
+                                    <span class="toolbar-label">Size:</span>
+                                    <select id="select-text-size" class="canvas-select">
+                                        <option value="13px">Small</option>
+                                        <option value="15px" selected>Normal</option>
+                                        <option value="18px">Large</option>
+                                        <option value="22px">X-Large</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="canvas-toolbar-row">
+                                <!-- Text Color Palette Swatches -->
+                                <div class="toolbar-group colors-group">
+                                    <span class="toolbar-label">Text Color:</span>
+                                    <div class="color-palette">
+                                        <div class="text-color-swatch active" data-color="#2d3748"
+                                            style="background-color: #2d3748;" title="Black/Charcoal"></div>
+                                        <div class="text-color-swatch" data-color="#f26522"
+                                            style="background-color: #f26522;" title="Saffron"></div>
+                                        <div class="text-color-swatch" data-color="#e53e3e"
+                                            style="background-color: #e53e3e;" title="Red"></div>
+                                        <div class="text-color-swatch" data-color="#3182ce"
+                                            style="background-color: #3182ce;" title="Blue"></div>
+                                        <div class="text-color-swatch" data-color="#38a169"
+                                            style="background-color: #38a169;" title="Green"></div>
+                                        <div class="text-color-swatch" data-color="#805ad5"
+                                            style="background-color: #805ad5;" title="Purple"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Drawing Formatting subtray -->
                         <div class="format-subtray" id="format-tray-draw">
                             <div class="canvas-toolbar-row">
@@ -557,12 +655,14 @@
                         </div>
                     </div>
 
-                    <!-- Workspace (Drawing Canvas Only) -->
+                    <!-- Layered Workspace Container (Bottom: Text Input, Top: Drawing Canvas Overlay) -->
                     <div class="editor-workspace-container">
+                        <textarea id="note-content-input" placeholder="Start writing down your realization..." class="editor-content-field"></textarea>
                         <div class="canvas-container">
                             <canvas id="note-canvas" width="1200" height="960"></canvas>
                         </div>
                     </div>
+
                 </div>
             </div>
         </section>
@@ -614,6 +714,13 @@
         </button>
     </nav>
 
+
+    <!-- Floating Exit Full Screen Button -->
+    <button id="btn-exit-fullscreen" class="floating-fullscreen-btn hidden" title="Exit Full Screen">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+        </svg>
+    </button>
 
     <!-- Cordova Integration -->
     <script type="text/javascript" src="cordova.js"></script>

@@ -1422,15 +1422,16 @@ body.dark-mode .canvas-container {
     position: relative;
     width: 100%;
     max-width: 100%;
-    /* aspect-ratio: 3 / 2 replaced with padding-bottom hack for iOS 9 */
-    /* 80% padding-bottom to make the canvas physically taller and larger */
-    padding-bottom: 80%;
-    height: 0;
+    height: 320px; /* Managed dynamically via JavaScript to enforce a strict 1.25 ratio and prevent overflow */
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     background-color: #ffffff;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    margin-left: auto;
+    margin-right: auto;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 body.dark-mode .editor-workspace-container {
@@ -2329,3 +2330,194 @@ body.dark-mode .volume-test-btn.active {
     background-color: #ff7830;
     color: #ffffff;
 }
+
+/* --- Reader Tools Bar (Zoom, Highlight, Full Screen) --- */
+.reader-tools-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 98;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .reader-tools-bar {
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #2d3748;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.reader-tools-bar.hidden {
+    display: none !important;
+}
+
+.reader-tool-group {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-align-items: center;
+    align-items: center;
+}
+
+.reader-tool-group>*+* {
+    margin-left: 8px;
+}
+
+.reader-tool-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #718096;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+}
+
+body.dark-mode .reader-tool-label {
+    color: #a0aec0;
+}
+
+.reader-bar-btn {
+    background-color: #edf2f7;
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    min-height: 28px;
+}
+
+body.dark-mode .reader-bar-btn {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+}
+
+.reader-bar-btn:active {
+    -webkit-transform: scale(0.95);
+    transform: scale(0.95);
+    background-color: #e2e8f0;
+}
+
+body.dark-mode .reader-bar-btn:active {
+    background-color: #4a5568;
+}
+
+.reader-zoom-slider {
+    width: 80px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: #cbd5e0;
+    outline: none;
+}
+
+body.dark-mode .reader-zoom-slider {
+    background: #4a5568;
+}
+
+.reader-zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #f26522;
+    cursor: pointer;
+}
+
+body.dark-mode .reader-zoom-slider::-webkit-slider-thumb {
+    background: #ff7830;
+}
+
+.reader-zoom-val {
+    font-size: 11px;
+    font-weight: 700;
+    color: #f26522;
+    min-width: 32px;
+    text-align: right;
+}
+
+body.dark-mode .reader-zoom-val {
+    color: #ff7830;
+}
+
+/* Shift iframe scroll wrapper down when toolbar is active */
+.app-content.show-reader-bar .iframe-scroll-wrapper {
+    top: 44px;
+}
+
+/* --- Full Screen Mode Styles --- */
+body.fullscreen-active .app-header,
+body.fullscreen-active .app-nav,
+body.fullscreen-active .media-volume-bar {
+    display: none !important;
+}
+
+body.fullscreen-active .app-content {
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100% !important;
+}
+
+/* Floating Exit Fullscreen Button */
+.floating-fullscreen-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.floating-fullscreen-btn:active {
+    -webkit-transform: scale(0.92);
+    transform: scale(0.92);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.floating-fullscreen-btn.hidden {
+    display: none !important;
+}
+
+/* --- Image Stretching Fixes for Sketch Overlays --- */
+.note-card-sketch-overlay img,
+.recent-note-sketch-overlay img {
+    object-fit: contain !important;
+}

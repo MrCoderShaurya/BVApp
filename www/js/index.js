@@ -20,15 +20,24 @@ var appState = {
     
     // Sketchpad Drawing State
     isDrawing: false,
-    currentTool: 'pen', // 'pen', 'eraser'
+    currentTool: 'pen', // 'pen', 'highlighter', 'eraser'
     currentSize: 3,
     currentEraserSize: 12,
     currentColor: '#2d3748',
     lastX: 0,
     lastY: 0,
     
-    // Editor Active Tool State ('pen', 'eraser')
-    activeTool: 'pen'
+    // Editor Active Tool State ('text', 'pen', 'highlighter', 'eraser')
+    activeTool: 'pen',
+
+    // Reader Zoom and Full Screen State
+    zoomLevels: {
+        lectures: 100,
+        bhajans: 100,
+        reading: 100,
+        calendar: 100
+    },
+    isFullscreen: false
 };
 
 // Target Embedded Iframe URLs
@@ -124,6 +133,16 @@ var BVApp = {
         this.bindEvents();
         this.initCanvasEvents();
         this.preloadIframes();
+
+        // Initialize Reader controls (Zoom, Highlighting, Fullscreen)
+        this.initZoom();
+        this.initHighlightButton();
+        this.initFullScreen();
+
+        // Bind resize event to adjust note canvas bounds dynamically
+        window.addEventListener('resize', function() {
+            self.resizeCanvasContainer();
+        });
 
         // Hide Splash Screen after 0.6 seconds (600ms) for much faster startup
         setTimeout(function() {
@@ -243,6 +262,12 @@ var BVApp = {
         document.getElementById('btn-tool-pen').addEventListener('click', function() {
             self.setActiveTool('pen');
         });
+        var btnToolHighlighter = document.getElementById('btn-tool-highlighter');
+        if (btnToolHighlighter) {
+            btnToolHighlighter.addEventListener('click', function() {
+                self.setActiveTool('highlighter');
+            });
+        }
         document.getElementById('btn-tool-eraser').addEventListener('click', function() {
             self.setActiveTool('eraser');
         });
@@ -275,6 +300,20 @@ var BVApp = {
                 if (note) {
                     note.italic = !note.italic;
                     if (note.italic) this.classList.add('active');
+                    else this.classList.remove('active');
+                    self.applyTextFormatting(note);
+                    self.triggerAutoSave();
+                }
+            });
+        }
+
+        var btnTextHighlight = document.getElementById('btn-text-highlight');
+        if (btnTextHighlight) {
+            btnTextHighlight.addEventListener('click', function() {
+                var note = self.findNoteById(appState.activeNoteId);
+                if (note) {
+                    note.textHighlighted = !note.textHighlighted;
+                    if (note.textHighlighted) this.classList.add('active');
                     else this.classList.remove('active');
                     self.applyTextFormatting(note);
                     self.triggerAutoSave();
@@ -364,23 +403,33 @@ var BVApp = {
     setActiveTool: function(toolName) {
         appState.activeTool = toolName;
         
+        var btnText = document.getElementById('btn-tool-text');
         var btnPen = document.getElementById('btn-tool-pen');
+        var btnHighlighter = document.getElementById('btn-tool-highlighter');
         var btnEraser = document.getElementById('btn-tool-eraser');
 
+        if (btnText) btnText.classList.remove('active');
         if (btnPen) btnPen.classList.remove('active');
+        if (btnHighlighter) btnHighlighter.classList.remove('active');
         if (btnEraser) btnEraser.classList.remove('active');
 
-        if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
+        if (toolName === 'text' && btnText) btnText.classList.add('active');
+        else if (toolName === 'pen' && btnPen) btnPen.classList.add('active');
+        else if (toolName === 'highlighter' && btnHighlighter) btnHighlighter.classList.add('active');
         else if (toolName === 'eraser' && btnEraser) btnEraser.classList.add('active');
 
         // Toggle Formatting Trays
+        var trayText = document.getElementById('format-tray-text');
         var trayDraw = document.getElementById('format-tray-draw');
         var trayEraser = document.getElementById('format-tray-eraser');
 
+        if (trayText) trayText.classList.add('hidden');
         if (trayDraw) trayDraw.classList.add('hidden');
         if (trayEraser) trayEraser.classList.add('hidden');
 
-        if (toolName === 'pen') {
+        if (toolName === 'text') {
+            if (trayText) trayText.classList.remove('hidden');
+        } else if (toolName === 'pen' || toolName === 'highlighter') {
             if (trayDraw) trayDraw.classList.remove('hidden');
         } else if (toolName === 'eraser') {
             if (trayEraser) trayEraser.classList.remove('hidden');
@@ -391,6 +440,7 @@ var BVApp = {
         if (editorSubview) {
             editorSubview.classList.remove('view-mode-text');
             editorSubview.classList.remove('view-mode-pen');
+            editorSubview.classList.remove('view-mode-highlighter');
             editorSubview.classList.remove('view-mode-eraser');
             editorSubview.classList.add('view-mode-' + toolName);
         }
@@ -540,6 +590,10 @@ var BVApp = {
         if (appState.currentTool === 'eraser') {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.lineWidth = appState.currentEraserSize || 12;
+        } else if (appState.currentTool === 'highlighter') {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = 'rgba(255, 235, 59, 0.45)'; // Semi-transparent yellow highlight
+            ctx.lineWidth = (appState.currentSize * 4.5) || 20; // Scale thicker
         } else {
             ctx.globalCompositeOperation = 'source-over';
             ctx.strokeStyle = appState.currentColor;
@@ -575,6 +629,31 @@ var BVApp = {
         // Save local tab history
         if (tabId === 'dashboard' || tabId === 'notes') {
             appState.previousLocalTab = tabId;
+        }
+
+        // Reader Tools Bar show/hide and Zoom Level synchronization
+        var readerBar = document.getElementById('reader-tools-bar');
+        var appContent = document.querySelector('.app-content');
+        var remoteTabs = ['lectures', 'bhajans', 'reading', 'calendar'];
+        
+        if (remoteTabs.indexOf(tabId) !== -1) {
+            if (readerBar) readerBar.classList.remove('hidden');
+            if (appContent) appContent.classList.add('show-reader-bar');
+            
+            // Sync slider and text to zoom level
+            var savedZoom = localStorage.getItem('bv_zoom_' + tabId);
+            var zoomVal = savedZoom ? parseInt(savedZoom, 10) : (appState.zoomLevels[tabId] || 100);
+            appState.zoomLevels[tabId] = zoomVal;
+            
+            var slider = document.getElementById('slider-zoom');
+            if (slider) slider.value = zoomVal;
+            var zoomIndicator = document.getElementById('zoom-value');
+            if (zoomIndicator) zoomIndicator.innerText = zoomVal + '%';
+            
+            this.updateZoom(tabId, zoomVal);
+        } else {
+            if (readerBar) readerBar.classList.add('hidden');
+            if (appContent) appContent.classList.remove('show-reader-bar');
         }
 
         // 1. Update active tab UI in bottom bar
@@ -1004,6 +1083,7 @@ var BVApp = {
                 image: null,
                 bold: false,
                 italic: false,
+                textHighlighted: false,
                 fontSize: '15px',
                 textColor: '#2d3748',
                 created: Date.now(),
@@ -1016,17 +1096,24 @@ var BVApp = {
             appState.canvasHasDrawing = false;
 
             if (titleField) titleField.value = '';
+            if (this.noteContentInput) this.noteContentInput.value = '';
             if (dateDisplay) dateDisplay.innerText = this.formatDateString(newNote.created);
             if (pinBtn) {
                 pinBtn.classList.remove('pinned');
                 pinBtn.title = 'Pin Note';
             }
+            
+            this.applyTextFormatting(newNote);
+            
+            // Resize canvas container to prevent stretching and overflow
+            this.resizeCanvasContainer();
         } else {
             // Edit existing note
             appState.activeNoteId = noteId;
             var note = this.findNoteById(noteId);
             if (note) {
                 if (titleField) titleField.value = note.title || '';
+                if (this.noteContentInput) this.noteContentInput.value = note.content || '';
                 if (dateDisplay) dateDisplay.innerText = 'Last modified: ' + this.formatDateString(note.modified);
                 
                 if (pinBtn) {
@@ -1038,6 +1125,11 @@ var BVApp = {
                         pinBtn.title = 'Pin Note';
                     }
                 }
+
+                this.applyTextFormatting(note);
+
+                // Resize canvas container to prevent stretching and overflow
+                this.resizeCanvasContainer();
 
                 // Load existing canvas drawing
                 if (note.image && ctx) {
@@ -1200,6 +1292,223 @@ var BVApp = {
     },
 
 
+
+    resizeCanvasContainer: function() {
+        var container = document.querySelector('.editor-workspace-container');
+        if (!container) return;
+        var parent = container.parentNode; // .editor-body
+        if (!parent) return;
+        
+        // Calculate occupied height by siblings in the editor body
+        var siblings = parent.children;
+        var occupiedHeight = 0;
+        for (var i = 0; i < siblings.length; i++) {
+            var sibling = siblings[i];
+            if (sibling !== container && !sibling.classList.contains('hidden') && sibling.style.display !== 'none') {
+                occupiedHeight += sibling.offsetHeight;
+                var style = window.getComputedStyle(sibling);
+                occupiedHeight += parseInt(style.marginTop || 0, 10) + parseInt(style.marginBottom || 0, 10);
+            }
+        }
+        
+        var parentStyle = window.getComputedStyle(parent);
+        var parentPaddingY = parseInt(parentStyle.paddingTop || 0, 10) + parseInt(parentStyle.paddingBottom || 0, 10);
+        var parentHeight = parent.clientHeight - parentPaddingY;
+        
+        var availHeight = parentHeight - occupiedHeight - 15; // 15px safety margin
+        var availWidth = parent.clientWidth - parseInt(parentStyle.paddingLeft || 0, 10) - parseInt(parentStyle.paddingRight || 0, 10);
+        
+        if (availHeight < 150) availHeight = 150; // Floor height
+        
+        // Locked ratio 1.25 (matches 1200x960 resolution)
+        var targetRatio = 1.25;
+        var w, h;
+        
+        if (availWidth / availHeight > targetRatio) {
+            h = availHeight;
+            w = availHeight * targetRatio;
+        } else {
+            w = availWidth;
+            h = availWidth / targetRatio;
+        }
+        
+        container.style.width = w + 'px';
+        container.style.height = h + 'px';
+    },
+
+    applyTextFormatting: function(note) {
+        var textarea = this.noteContentInput;
+        if (!textarea) return;
+        
+        if (note) {
+            textarea.style.fontWeight = note.bold ? 'bold' : 'normal';
+            textarea.style.fontStyle = note.italic ? 'italic' : 'normal';
+            textarea.style.fontSize = note.fontSize || '15px';
+            textarea.style.color = note.textColor || '#2d3748';
+            textarea.style.backgroundColor = note.textHighlighted ? '#fff3cd' : 'transparent';
+            
+            // Sync buttons active state
+            var btnBold = document.getElementById('btn-text-bold');
+            if (btnBold) {
+                if (note.bold) btnBold.classList.add('active');
+                else btnBold.classList.remove('active');
+            }
+            var btnItalic = document.getElementById('btn-text-italic');
+            if (btnItalic) {
+                if (note.italic) btnItalic.classList.add('active');
+                else btnItalic.classList.remove('active');
+            }
+            var btnHighlight = document.getElementById('btn-text-highlight');
+            if (btnHighlight) {
+                if (note.textHighlighted) btnHighlight.classList.add('active');
+                else btnHighlight.classList.remove('active');
+            }
+            var selectSize = document.getElementById('select-text-size');
+            if (selectSize) {
+                selectSize.value = note.fontSize || '15px';
+            }
+            
+            var textSwatches = document.querySelectorAll('.text-color-swatch');
+            for (var i = 0; i < textSwatches.length; i++) {
+                if (textSwatches[i].getAttribute('data-color') === note.textColor) {
+                    textSwatches[i].classList.add('active');
+                } else {
+                    textSwatches[i].classList.remove('active');
+                }
+            }
+        } else {
+            textarea.style.fontWeight = 'normal';
+            textarea.style.fontStyle = 'normal';
+            textarea.style.fontSize = '15px';
+            textarea.style.color = '#2d3748';
+            textarea.style.backgroundColor = 'transparent';
+        }
+    },
+
+    initZoom: function() {
+        var self = this;
+        var slider = document.getElementById('slider-zoom');
+        var zoomVal = document.getElementById('zoom-value');
+        var btnOut = document.getElementById('btn-zoom-out');
+        var btnIn = document.getElementById('btn-zoom-in');
+        
+        if (slider) {
+            slider.addEventListener('input', function() {
+                var val = parseInt(this.value, 10);
+                if (zoomVal) zoomVal.innerText = val + '%';
+                var activeTab = appState.activeTab;
+                if (activeTab === 'lectures' || activeTab === 'bhajans' || activeTab === 'reading' || activeTab === 'calendar') {
+                    self.updateZoom(activeTab, val);
+                }
+            });
+        }
+        
+        if (btnOut) {
+            btnOut.addEventListener('click', function() {
+                if (slider) {
+                    var val = Math.max(50, parseInt(slider.value, 10) - 10);
+                    slider.value = val;
+                    if (zoomVal) zoomVal.innerText = val + '%';
+                    var activeTab = appState.activeTab;
+                    if (activeTab === 'lectures' || activeTab === 'bhajans' || activeTab === 'reading' || activeTab === 'calendar') {
+                        self.updateZoom(activeTab, val);
+                    }
+                }
+            });
+        }
+        
+        if (btnIn) {
+            btnIn.addEventListener('click', function() {
+                if (slider) {
+                    var val = Math.min(200, parseInt(slider.value, 10) + 10);
+                    slider.value = val;
+                    if (zoomVal) zoomVal.innerText = val + '%';
+                    var activeTab = appState.activeTab;
+                    if (activeTab === 'lectures' || activeTab === 'bhajans' || activeTab === 'reading' || activeTab === 'calendar') {
+                        self.updateZoom(activeTab, val);
+                    }
+                }
+            });
+        }
+    },
+
+    updateZoom: function(tabId, zoomPct) {
+        appState.zoomLevels[tabId] = zoomPct;
+        localStorage.setItem('bv_zoom_' + tabId, zoomPct);
+        
+        var iframe = document.getElementById('iframe-' + tabId);
+        if (!iframe) return;
+        
+        var scale = zoomPct / 100;
+        iframe.style.transform = 'scale(' + scale + ')';
+        iframe.style.transformOrigin = 'top left';
+        iframe.style.width = (100 / scale) + '%';
+        iframe.style.height = (100 / scale) + '%';
+    },
+
+    initHighlightButton: function() {
+        var self = this;
+        var btn = document.getElementById('btn-reader-highlight');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                self.highlightSelectedText();
+            });
+        }
+    },
+
+    highlightSelectedText: function() {
+        var selection = window.getSelection();
+        if (selection && selection.toString().trim().length > 0) {
+            if (selection.rangeCount > 0) {
+                var range = selection.getRangeAt(0);
+                
+                var container = range.commonAncestorContainer;
+                while (container && container !== document.body) {
+                    if (container.tagName === 'IFRAME') {
+                        alert('Direct highlighting inside external websites is restricted by browser security policies. You can capture and highlight your notes in the Notes tab.');
+                        return;
+                    }
+                    container = container.parentNode;
+                }
+
+                var span = document.createElement('span');
+                span.className = 'text-highlight';
+                span.style.backgroundColor = '#ffeb3b';
+                span.style.color = '#000000';
+                
+                try {
+                    range.surroundContents(span);
+                    selection.removeAllRanges();
+                } catch (err) {
+                    alert('Highlighting failed: selection is too complex. Try selecting simpler text.');
+                    console.error('Highlight failed:', err);
+                }
+            }
+        } else {
+            alert('Please select some text first (e.g. from the offline songbook or offline verses below) and then click Highlight.\n\nNote: Highlights inside external websites (like Vedabase/audio) are restricted due to Same-Origin security. Use the Notes tab to highlight your realizations.');
+        }
+    },
+
+    initFullScreen: function() {
+        var self = this;
+        var btnReaderFS = document.getElementById('btn-reader-fullscreen');
+        var btnExitFS = document.getElementById('btn-exit-fullscreen');
+        
+        var toggleFS = function() {
+            appState.isFullscreen = !appState.isFullscreen;
+            if (appState.isFullscreen) {
+                document.body.classList.add('fullscreen-active');
+                if (btnExitFS) btnExitFS.classList.remove('hidden');
+            } else {
+                document.body.classList.remove('fullscreen-active');
+                if (btnExitFS) btnExitFS.classList.add('hidden');
+            }
+            self.resizeCanvasContainer();
+        };
+        
+        if (btnReaderFS) btnReaderFS.addEventListener('click', toggleFS);
+        if (btnExitFS) btnExitFS.addEventListener('click', toggleFS);
+    },
 
     escapeHTML: function(str) {
         if (!str) return '';
